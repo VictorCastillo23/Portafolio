@@ -4,7 +4,8 @@
 // `omegaup`'s exclusion at merge time, not just at snapshot-fetch time.
 
 import { describe, expect, it } from "vitest";
-import type { ProjectCuration } from "../data/projects";
+import realSnapshotRaw from "../data/github-repos.json";
+import { PROJECT_CURATION, type ProjectCuration } from "../data/projects";
 import { findContentGaps, mergeProjects, parseSnapshot, type GithubSnapshot } from "./projects";
 
 function snapshot(repos: GithubSnapshot["repos"]): GithubSnapshot {
@@ -399,5 +400,34 @@ describe("findContentGaps", () => {
 
   it("does not crash and returns an empty array for empty sections", () => {
     expect(findContentGaps({ featured: [], other: [] })).toEqual([]);
+  });
+});
+
+describe("contract: real data/github-repos.json", () => {
+  it("passes parseSnapshot without throwing", () => {
+    expect(() => parseSnapshot(realSnapshotRaw)).not.toThrow();
+  });
+
+  it("merges with the real curation into the expected tiers, with omegaup excluded", () => {
+    const realSnapshot = parseSnapshot(realSnapshotRaw);
+
+    const sections = mergeProjects(PROJECT_CURATION, realSnapshot);
+
+    expect(sections.featured.map((p) => p.repo)).toEqual(["Es_Vitrina", "CameraChatbot"]);
+    expect(sections.other.map((p) => p.repo)).toEqual([
+      "Modulo-inventario",
+      "Risk-Game",
+      "Tutorial-Open-CV-para-principiantes-con-Python",
+    ]);
+
+    const allRepos = [...sections.featured, ...sections.other].map((p) => p.repo.toLowerCase());
+    expect(allRepos).not.toContain("omegaup");
+  });
+
+  it("produces no content gaps against the real curation and snapshot", () => {
+    const realSnapshot = parseSnapshot(realSnapshotRaw);
+    const sections = mergeProjects(PROJECT_CURATION, realSnapshot);
+
+    expect(findContentGaps(sections)).toEqual([]);
   });
 });
