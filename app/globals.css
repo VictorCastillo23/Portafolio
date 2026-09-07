@@ -23,6 +23,10 @@ section[id] {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
   @keyframes riseIn {
     from {
       opacity: 0;
