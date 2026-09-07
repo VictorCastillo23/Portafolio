@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-09-07T17:57:45.016Z",
+  "user": "VictorCastillo23",
+  "repos": [
+    {
+      "name": "CameraChatbot",
+      "description": null,
+      "language": "Python",
+      "topics": [],
+      "htmlUrl": "https://github.com/VictorCastillo23/CameraChatbot",
+      "homepage": null,
+      "stars": 1
+    },
+    {
+      "name": "Es_Vitrina",
+      "description": null,
+      "language": "TypeScript",
+      "topics": [],
+      "htmlUrl": "https://github.com/VictorCastillo23/Es_Vitrina",
+      "homepage": "https://esvitrina.com",
+      "stars": 1
+    },
+    {
+      "name": "Modulo-inventario",
+      "description": null,
+      "language": "Java",
+      "topics": [],
+      "htmlUrl": "https://github.com/VictorCastillo23/Modulo-inventario",
+      "homepage": null,
+      "stars": 1
+    },
+    {
+      "name": "Risk-Game",
+      "description": "Una copia del juego RISK llevada a C#",
+      "language": "C#",
+      "topics": [],
+      "htmlUrl": "https://github.com/VictorCastillo23/Risk-Game",
+      "homepage": null,
+      "stars": 0
+    },
+    {
+      "name": "Tutorial-Open-CV-para-principiantes-con-Python",
+      "description": null,
+      "language": "Jupyter Notebook",
+      "topics": [],
+      "htmlUrl": "https://github.com/VictorCastillo23/Tutorial-Open-CV-para-principiantes-con-Python",
+      "homepage": null,
+      "stars": 1
+    }
+  ]
+}
