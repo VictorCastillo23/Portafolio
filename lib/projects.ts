@@ -10,6 +10,8 @@
 // independent of the (best-effort) filtering already done when the snapshot
 // is fetched (scripts/fetch-github.ts).
 
+import type { ProjectCuration } from "../data/projects";
+
 export interface GithubRepoSnapshot {
   name: string;
   description: string | null;
@@ -98,4 +100,85 @@ function parseRepoEntry(entry: unknown, index: number): GithubRepoSnapshot {
     homepage: repo.homepage as string | null,
     stars: repo.stars,
   };
+}
+
+export interface Project {
+  repo: string;
+  title: string;
+  description: string;
+  stack: string[];
+  repoUrl: string;
+  demoUrl: string | null;
+  tier: "featured" | "other";
+  order: number;
+}
+
+export interface ProjectSections {
+  featured: Project[];
+  other: Project[];
+}
+
+/**
+ * Merges the curation allow-list (data/projects.ts) with the GitHub snapshot
+ * by repo name (case-insensitive). Curation is layer 2 and ALWAYS wins on
+ * conflicts; the snapshot only fills in fields curation leaves unset.
+ *
+ * Total function — never throws. A curation entry with no snapshot match
+ * still renders (degraded: empty description/stack, constructed repo URL)
+ * instead of crashing the build on a partial or stale snapshot. A snapshot
+ * repo absent from `curation` is silently dropped — this is the allow-list
+ * enforcement that excludes `omegaup` at merge time.
+ */
+export function mergeProjects(
+  curation: readonly ProjectCuration[],
+  snapshot: GithubSnapshot,
+): ProjectSections {
+  const snapshotByName = new Map(
+    snapshot.repos.map((repo) => [repo.name.toLowerCase(), repo] as const),
+  );
+
+  const projects = curation.map((entry) => buildProject(entry, snapshotByName, snapshot.user));
+
+  return {
+    featured: sortTier(projects.filter((project) => project.tier === "featured")),
+    other: sortTier(projects.filter((project) => project.tier === "other")),
+  };
+}
+
+function buildProject(
+  entry: ProjectCuration,
+  snapshotByName: Map<string, GithubRepoSnapshot>,
+  snapshotUser: string,
+): Project {
+  const match = snapshotByName.get(entry.repo.toLowerCase());
+
+  const description = entry.description ?? match?.description ?? "";
+  const stack = entry.stack ?? deriveStack(match);
+  const repoUrl = match?.htmlUrl ?? `https://github.com/${snapshotUser}/${entry.repo}`;
+  const demoUrl = entry.demoUrl ?? (match?.homepage || null);
+
+  return {
+    repo: entry.repo,
+    title: entry.title,
+    description,
+    stack,
+    repoUrl,
+    demoUrl,
+    tier: entry.tier,
+    order: entry.order,
+  };
+}
+
+function deriveStack(match: GithubRepoSnapshot | undefined): string[] {
+  if (!match) {
+    return [];
+  }
+  const candidates = [match.language, ...match.topics].filter(
+    (value): value is string => Boolean(value),
+  );
+  return Array.from(new Set(candidates));
+}
+
+function sortTier(projects: Project[]): Project[] {
+  return [...projects].sort((a, b) => a.order - b.order || a.repo.localeCompare(b.repo));
 }
