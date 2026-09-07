@@ -5,6 +5,7 @@
 
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { SECTION_IDS } from "../data/content";
 import { mockIntersectionObservers } from "../vitest.setup";
 import { useActiveSection } from "./useActiveSection";
 
@@ -123,5 +124,18 @@ describe("useActiveSection", () => {
     } finally {
       vi.stubGlobal("IntersectionObserver", sharedMockObserver);
     }
+  });
+
+  describe("contract: the frozen SECTION_IDS from data/content.ts", () => {
+    it("resolves the active id for every real section in document order", () => {
+      const elements = SECTION_IDS.map((id) => appendSection(id));
+
+      const { result } = renderHook(() => useActiveSection(SECTION_IDS));
+      const projectsEl = elements[SECTION_IDS.indexOf("projects")];
+
+      fireIntersection([{ target: projectsEl, isIntersecting: true }]);
+
+      expect(result.current).toBe("projects");
+    });
   });
 });
