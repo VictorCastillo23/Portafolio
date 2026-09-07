@@ -8,6 +8,10 @@ Generated with `engram export`, filtered to the `portafolio` project. Not auto-s
 re-run the export manually if you want an up-to-date snapshot after further SDD phases
 (`sdd-verify`, `judgment-day`, archive).
 
+The raw re-importable JSON export (`engram-export.portafolio.json`) was removed —
+`.engram/` (native `engram sync`) is the canonical re-importable snapshot; these `.md`
+files remain as human-readable documentation only.
+
 ## Files
 
 | File | Topic key | What it is |
@@ -22,7 +26,6 @@ re-run the export manually if you want an up-to-date snapshot after further SDD 
 | `sdd-portfolio-nextjs-app-tasks.md` | `sdd/portfolio-nextjs-app/tasks` | Task breakdown, PR/work-unit split history |
 | `sdd-portfolio-nextjs-app-apply-progress.md` | `sdd/portfolio-nextjs-app/apply-progress` | Final implementation state: all 9 branches, verification results, open items |
 | `197-phase-3-lib-projects.ts-tdd-implementation-review-budget-risk-on-pr3.md` | — | Standalone discovery note from the PR3 TDD batch |
-| `engram-export.portafolio.json` | — | Raw re-importable export (`engram import engram-export.portafolio.json`) |
 | `_index.json` | — | Machine-readable index of the files above |
 
 ## Why this exists
