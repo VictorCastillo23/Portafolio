@@ -4,8 +4,12 @@
 // build step. `next build` and page render must never hit the network; a
 // GitHub outage must never break a deploy (design Part 2, decision 1 & 13).
 //
-// Fails closed: on any non-2xx response, or a network error, the existing
-// committed snapshot is left untouched and the process exits 1.
+// Fails closed on the main repo-list request: any non-2xx response there
+// (or an unexpected error anywhere in the run) leaves the existing committed
+// snapshot untouched and exits 1. The per-repo topics fallback is treated as
+// a best-effort enrichment, not critical data: if it fails, that repo's
+// topics degrade to an empty array with a warning instead of aborting the
+// whole snapshot write.
 
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
