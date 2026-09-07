@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { ProjectCuration } from "../data/projects";
-import { mergeProjects, parseSnapshot, type GithubSnapshot } from "./projects";
+import { findContentGaps, mergeProjects, parseSnapshot, type GithubSnapshot } from "./projects";
 
 function snapshot(repos: GithubSnapshot["repos"]): GithubSnapshot {
   return {
@@ -356,5 +356,48 @@ describe("mergeProjects", () => {
     expect(first).toEqual(second);
     expect(first).not.toBe(second);
     expect(first.featured).not.toBe(second.featured);
+  });
+});
+
+describe("findContentGaps", () => {
+  it("flags a project with an empty description as a missing-description gap", () => {
+    const curation: ProjectCuration[] = [
+      { repo: "Ghost-Repo", tier: "other", order: 1, title: "Ghost Repo" },
+    ];
+    const sections = mergeProjects(curation, snapshot([])); // no snapshot match -> description ''
+
+    const gaps = findContentGaps(sections);
+
+    expect(gaps).toEqual([{ repo: "Ghost-Repo", reason: "missing-description" }]);
+  });
+
+  it("returns no gaps when every project has a non-empty description", () => {
+    const curation: ProjectCuration[] = [
+      { repo: "Es_Vitrina", tier: "featured", order: 1, title: "Es Vitrina", description: "ok" },
+      { repo: "Risk-Game", tier: "other", order: 1, title: "Risk Game" },
+    ];
+    const snap = snapshot([repo({ name: "Risk-Game", description: "Snapshot description" })]);
+
+    const gaps = findContentGaps(mergeProjects(curation, snap));
+
+    expect(gaps).toEqual([]);
+  });
+
+  it("checks both the featured and other tiers", () => {
+    const curation: ProjectCuration[] = [
+      { repo: "Featured-Ghost", tier: "featured", order: 1, title: "Featured Ghost" },
+      { repo: "Other-Ghost", tier: "other", order: 1, title: "Other Ghost" },
+    ];
+
+    const gaps = findContentGaps(mergeProjects(curation, snapshot([])));
+
+    expect(gaps).toEqual([
+      { repo: "Featured-Ghost", reason: "missing-description" },
+      { repo: "Other-Ghost", reason: "missing-description" },
+    ]);
+  });
+
+  it("does not crash and returns an empty array for empty sections", () => {
+    expect(findContentGaps({ featured: [], other: [] })).toEqual([]);
   });
 });

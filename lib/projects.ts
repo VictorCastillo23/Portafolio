@@ -182,3 +182,21 @@ function deriveStack(match: GithubRepoSnapshot | undefined): string[] {
 function sortTier(projects: Project[]): Project[] {
   return [...projects].sort((a, b) => a.order - b.order || a.repo.localeCompare(b.repo));
 }
+
+export interface ContentGap {
+  repo: string;
+  reason: "missing-description";
+}
+
+/**
+ * Flags projects that resolved to an empty description — i.e. neither
+ * `data/projects.ts` nor the GitHub snapshot supplied one. Per spec
+ * (project-showcase: "No Invented Content for Missing Descriptions"), an
+ * empty description must never silently render; this gate exists so
+ * `npm run lint:content` (scripts/check-content.ts) can fail loudly instead.
+ */
+export function findContentGaps(sections: ProjectSections): ContentGap[] {
+  return [...sections.featured, ...sections.other]
+    .filter((project) => project.description === "")
+    .map((project) => ({ repo: project.repo, reason: "missing-description" as const }));
+}
