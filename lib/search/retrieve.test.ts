@@ -88,6 +88,19 @@ describe("lexicalScores", () => {
     expect(scores.has("contact")).toBe(false);
   });
 
+  it("still finds a match when the query mixes a matching term with terms absent from the corpus — the natural-language-question scenario (discovered during Phase 5 apply: FlexSearch's default search() requires ALL query terms to match, which silently empties every realistic multi-word visitor question)", () => {
+    const chunks = [
+      chunk({
+        id: "experience-juventudes",
+        text: "Juventudes — Gobierno Municipal. Migración del sistema de PHP a Angular.",
+      }),
+    ];
+
+    const scores = lexicalScores(chunks, "¿Qué hiciste en Juventudes?");
+
+    expect(scores.has("experience-juventudes")).toBe(true);
+  });
+
   it("returns an empty map for a query with zero vocabulary overlap", () => {
     const chunks = [chunk({ id: "a", text: "Angular y Next.js." })];
 
@@ -345,5 +358,11 @@ describe("contract: real data/search-index.json", () => {
     const results = retrieve("Juventudes", realIndex);
 
     expect(results.map((r) => r.id)).toContain("about-skills");
+  });
+
+  it("a natural-language Spanish question (not a single keyword) still surfaces the relevant chunk as the top result", () => {
+    const results = retrieve("¿Qué hiciste en Juventudes?", realIndex);
+
+    expect(results[0]?.id).toBe("experience-juventudes");
   });
 });

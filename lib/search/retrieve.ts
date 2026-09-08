@@ -119,6 +119,20 @@ function buildLexicalIndex(chunks: readonly IndexedChunk[]): Index {
  * value — fuseScores() min-max normalizes it before combining with the
  * semantic leg, so the exact shape of this decay only needs to be
  * monotonic with rank, not calibrated in absolute terms.
+ *
+ * `suggest: true` is required, not cosmetic: FlexSearch's default
+ * `search()` requires EVERY tokenized query term to match a document (an
+ * implicit AND across terms) — see `SearchOptions` in flexsearch's own
+ * `index.d.ts` (no `bool`/`or` option exists in this version at all).
+ * Real visitor questions are natural-language sentences ("¿Qué hiciste en
+ * Juventudes?"), and filler/verb tokens like "hiciste" appear nowhere in
+ * an 18-chunk corpus — under strict AND that empties the seed set for
+ * almost every realistic question, even when a distinctive term like
+ * "Juventudes" has an exact hit. `suggest: true` switches to partial-match
+ * ranking (documents matching SOME query terms still return, ranked by how
+ * many/how well they match) — discovered and fixed during Phase 5 apply;
+ * see `lib/search/retrieve.test.ts`'s "natural-language-question scenario"
+ * tests for the regression coverage.
  */
 export function lexicalScores(
   chunks: readonly IndexedChunk[],
@@ -131,7 +145,7 @@ export function lexicalScores(
   }
 
   const flexIndex = buildLexicalIndex(chunks);
-  const ids = flexIndex.search(trimmed, { limit: seedCount }) as Array<string | number>;
+  const ids = flexIndex.search(trimmed, { limit: seedCount, suggest: true }) as Array<string | number>;
 
   const scores = new Map<string, number>();
   ids.forEach((id, rank) => {
