@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { budgetKey, nextResetEpochSeconds } from "./budget";
+import { budgetKey, evaluateBudget, nextResetEpochSeconds } from "./budget";
 
 describe("budgetKey", () => {
   it("keys by the UTC calendar date", () => {
@@ -47,5 +47,40 @@ describe("nextResetEpochSeconds", () => {
     const now = new Date("2026-12-31T12:00:00.000Z");
     const expected = Date.UTC(2027, 0, 1, 0, 0, 0, 0) / 1000;
     expect(nextResetEpochSeconds(now)).toBe(expected);
+  });
+});
+
+describe("evaluateBudget", () => {
+  const now = new Date("2026-09-08T14:30:00.000Z");
+  const expectedResetAt = new Date(Date.UTC(2026, 8, 9, 0, 0, 0, 0)).toISOString();
+
+  it("allows the request and reports remaining budget when count is under the limit", () => {
+    expect(evaluateBudget(50, 200, now)).toEqual({
+      allowed: true,
+      remaining: 150,
+      resetAt: expectedResetAt,
+    });
+  });
+
+  it("still allows the request that brings the count exactly to the limit, with zero remaining", () => {
+    expect(evaluateBudget(200, 200, now)).toEqual({
+      allowed: true,
+      remaining: 0,
+      resetAt: expectedResetAt,
+    });
+  });
+
+  it("rejects the request once count exceeds the limit, remaining clamped at zero", () => {
+    expect(evaluateBudget(201, 200, now)).toEqual({
+      allowed: false,
+      remaining: 0,
+      resetAt: expectedResetAt,
+    });
+  });
+
+  it("clamps remaining at zero for counts far beyond the limit, not a negative number", () => {
+    const result = evaluateBudget(500, 200, now);
+    expect(result.allowed).toBe(false);
+    expect(result.remaining).toBe(0);
   });
 });

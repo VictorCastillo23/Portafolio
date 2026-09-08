@@ -43,3 +43,18 @@ export function nextResetEpochSeconds(now: Date): number {
   const nextMidnightMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0);
   return Math.floor(nextMidnightMs / 1000);
 }
+
+/**
+ * Pure decision function: given the counter value AFTER incrementing and the
+ * effective limit, decides whether the request is allowed. The request that
+ * brings the count exactly to the limit is still allowed — it is the one
+ * that legitimately exhausts the budget; anything beyond that is rejected.
+ * `remaining` never goes negative.
+ */
+export function evaluateBudget(count: number, limit: number, now: Date): BudgetResult {
+  return {
+    allowed: count <= limit,
+    remaining: Math.max(limit - count, 0),
+    resetAt: new Date(nextResetEpochSeconds(now) * 1000).toISOString(),
+  };
+}
