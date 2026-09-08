@@ -1,75 +1,20 @@
 # Portafolio
 
-Personal single-page portfolio built with Next.js App Router, presenting CV content
-and GitHub projects in one place — no backend, everything resolves at build time.
+Hola, mucho gusto. Este es mi portafolio profesional de una sola página
+construido con Next.js App Router, que tiene el contenido de mi CV y mis
+proyectos de GitHub 
 
 ## Stack
 
 - [Next.js 16](https://nextjs.org) (App Router) + React 19 + TypeScript
-- Tailwind CSS v4 (CSS-first `@theme` tokens, no `tailwind.config.ts`)
-- Vitest, Testing Library, and vitest-axe for testing
+- Tailwind CSS v4 (tokens `@theme` CSS-first, sin `tailwind.config.ts`)
+- Vitest, Testing Library y vitest-axe para testing
 
-## What's on the page
+## Datos del proyecto
 
-One route, six sections, in this locked order:
+Tres capas tipadas y versionadas se combinan por nombre de repositorio en tiempo
+de build — no se hacen llamadas en vivo a GitHub durante `next build`:
 
-- **Hero** — name, tagline, single CSS-only staggered entrance animation
-- **About** — profile, skills, education
-- **Experience** — role history as an accessible tab list (ARIA tablist, roving tabindex)
-- **Credentials** — awards and publications, kept separate from About
-- **Projects** — Featured / Other tiers, sourced from GitHub
-- **Contact** — `mailto:` CTA + social links, no form, no backend
-
-Nav collapses into a hamburger below the `md` breakpoint and highlights the active
-section via `IntersectionObserver`-based scroll-spy. Everything respects
-`prefers-reduced-motion`.
-
-## Project data
-
-Three typed, committed layers are merged by repo name at build time — no live
-GitHub calls happen during `next build`:
-
-1. `data/content.ts` — static CV content (nav, hero, about, experience, credentials, contact)
-2. `data/projects.ts` — curation allow-list; wins on any conflict with the snapshot
-3. `data/github-repos.json` — committed GitHub API snapshot, refreshed manually
-
-Repos not in the curation allow-list are excluded from the merge, even if present
-in the snapshot.
-
-## Getting started
-
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view it.
-
-## Scripts
-
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Build for production |
-| `npm run start` | Run the production build |
-| `npm run lint` | Run ESLint |
-| `npm test` | Run the test suite once |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run fetch:github` | Refresh the local GitHub project snapshot |
-| `npm run lint:content` | Check for content gaps against the GitHub snapshot |
-
-## Testing approach
-
-Strict TDD applies to the two logic-bearing modules — `lib/projects.ts` (curation +
-snapshot merge) and `lib/useActiveSection.ts` (scroll-spy hook). Presentational
-components get render + accessibility smoke tests (`vitest-axe`, zero violations
-required) instead of exhaustive unit specs.
-
-## Project structure
-
-- `app/` — root layout and page composition
-- `components/layout/` — Nav, Footer, and fixed sidebars
-- `components/sections/` — page sections (Hero, About, Credentials, Experience, Projects, Contact)
-- `components/ui/` — shared primitives (Icon, Section, ProjectCard)
-- `lib/` — project data merging and active-section tracking
-- `scripts/` — GitHub data fetching and content validation
+1. `data/content.ts` — contenido estático del CV (nav, hero, about, experience, credentials, contact)
+2. `data/projects.ts` — lista de curaduría; gana ante cualquier conflicto con el snapshot
+3. `data/github-repos.json` — snapshot versionado de la API de GitHub, actualizado manualmente
