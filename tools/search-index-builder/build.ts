@@ -28,25 +28,22 @@
 // intentional: those files are pure TypeScript with no dependency on
 // anything in the root's node_modules (or this package's), only on
 // TypeScript itself, which this package provides via its own devDependency.
-// Phase 2 (lib/search/chunks.ts, task 2.1) will extract buildChunks() below
-// into the root's lib/search/chunks.ts; once that lands, this file's local
-// buildChunks()/jobChunk()/credentialChunk()/projectChunk()/slugify()/
-// anchorFor() should be replaced with an import of that root module instead
-// (same cross-boundary relative-import pattern, just importing a function
-// instead of duplicating its logic).
+// Phase 2 task 2.1 extracted buildChunks() (previously defined inline here)
+// into the root's lib/search/chunks.ts; this file now imports it instead of
+// duplicating its logic (same cross-boundary relative-import pattern
+// already used for data/content, data/projects, lib/projects, and
+// lib/search/types below). Verified reachable: `npx tsc --noEmit` scoped to
+// this package's own tsconfig.json resolves the import cleanly (plain
+// relative-path resolution — moduleResolution "bundler" doesn't require any
+// path mapping for this to work).
 
 import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { pipeline } from "@huggingface/transformers";
-import {
-  content,
-  SECTION_IDS,
-  type Job,
-  type Credential,
-  type SectionId,
-} from "../../data/content";
+import { content } from "../../data/content";
 import { PROJECT_CURATION } from "../../data/projects";
-import { mergeProjects, parseSnapshot, type Project, type ProjectSections } from "../../lib/projects";
+import { mergeProjects, parseSnapshot } from "../../lib/projects";
+import { buildChunks } from "../../lib/search/chunks";
 import {
   SEARCH_INDEX_DIMENSIONS,
   type IndexedChunk,
@@ -61,131 +58,6 @@ const EMBEDDING_PRECISION = 6;
 const ROOT_DIR = path.resolve(import.meta.dirname, "../..");
 const SNAPSHOT_PATH = path.resolve(ROOT_DIR, "data/github-repos.json");
 const OUTPUT_PATH = path.resolve(ROOT_DIR, "data/search-index.json");
-
-/**
- * Deterministic ascii-ish slug for credential ids — credentials have no `id`
- * field of their own (data/content.ts's Credential shape is out of scope for
- * this change), so ids are derived from the title. Retitling a credential
- * changes its chunk id; accepted per design, since citations are not
- * persisted across builds.
- */
-function slugify(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "") // strip combining diacritics (e.g. accented vowels -> plain)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function anchorFor(section: SectionId): string {
-  return `#${section}`;
-}
-
-function jobChunk(job: Job): SearchChunk {
-  return {
-    id: `experience-${job.id}`,
-    section: "experience",
-    title: `${job.company} — ${job.role}`,
-    text: `${job.company} — ${job.role} (${job.range}). ${job.bullets.join(" ")}`,
-    anchor: anchorFor("experience"),
-    url: null,
-  };
-}
-
-function credentialChunk(credential: Credential): SearchChunk {
-  const detail = credential.detail ? ` ${credential.detail}` : "";
-  return {
-    id: `credential-${slugify(credential.title)}`,
-    section: "credentials",
-    title: credential.title,
-    text: `${credential.title} — ${credential.issuer} (${credential.date}).${detail}`,
-    anchor: anchorFor("credentials"),
-    url: credential.url ?? null,
-  };
-}
-
-function projectChunk(project: Project): SearchChunk {
-  const stack = project.stack.length > 0 ? ` Stack: ${project.stack.join(", ")}.` : "";
-  return {
-    id: `project-${project.repo.toLowerCase()}`,
-    section: "projects",
-    title: project.title,
-    text: `${project.title}. ${project.description}${stack}`,
-    anchor: anchorFor("projects"),
-    url: project.repoUrl,
-  };
-}
-
-/**
- * Pure chunk mapper — kept inline here for Phase 1. Phase 2
- * (lib/search/chunks.ts, task 2.1) extracts this into a standalone,
- * independently unit-tested `buildChunks()` in the root repo per HR-1; this
- * file should then import it instead of defining its own copy.
- */
-function buildChunks(sections: ProjectSections): SearchChunk[] {
-  const chunks: SearchChunk[] = [
-    {
-      id: "hero",
-      section: "hero",
-      title: content.hero.title,
-      text: `${content.meta.name} — ${content.meta.role}. ${content.hero.tagline} ${content.hero.blurb}`,
-      anchor: anchorFor("hero"),
-      url: null,
-    },
-    {
-      id: "about-summary",
-      section: "about",
-      title: "Sobre mí — Resumen",
-      text: content.about.paragraphs.join(" "),
-      anchor: anchorFor("about"),
-      url: null,
-    },
-    {
-      id: "about-skills",
-      section: "about",
-      title: "Sobre mí — Habilidades",
-      text: `Habilidades: ${content.about.skills.join(", ")}.`,
-      anchor: anchorFor("about"),
-      url: null,
-    },
-    {
-      id: "about-education",
-      section: "about",
-      title: "Sobre mí — Educación",
-      text: `${content.about.education.degree} — ${content.about.education.school} (${content.about.education.range}). ${content.about.education.detail}`,
-      anchor: anchorFor("about"),
-      url: null,
-    },
-    ...content.experience.map(jobChunk),
-    ...content.credentials.map(credentialChunk),
-    ...[...sections.featured, ...sections.other].map(projectChunk),
-    {
-      id: "contact",
-      section: "contact",
-      title: "Contacto",
-      text: `${content.contact.blurb} Email: ${content.contact.email}. Teléfono: ${content.contact.phone}.`,
-      anchor: anchorFor("contact"),
-      url: null,
-    },
-  ];
-
-  const seenIds = new Set<string>();
-  for (const chunk of chunks) {
-    if (seenIds.has(chunk.id)) {
-      throw new Error(`[search-index-builder] Duplicate chunk id detected: "${chunk.id}".`);
-    }
-    seenIds.add(chunk.id);
-    if (!SECTION_IDS.includes(chunk.section)) {
-      throw new Error(`[search-index-builder] Unknown section "${chunk.section}" on chunk "${chunk.id}".`);
-    }
-    if (chunk.text.trim().length === 0) {
-      throw new Error(`[search-index-builder] Chunk "${chunk.id}" has empty text.`);
-    }
-  }
-
-  return chunks;
-}
 
 async function embedChunks(chunks: SearchChunk[]): Promise<number[][]> {
   // 8-bit quantized weights: a fraction of the fp32 download (default) with
@@ -241,7 +113,7 @@ async function buildIndex(): Promise<SearchIndex> {
   const snapshot = parseSnapshot(rawSnapshot);
   const sections = mergeProjects(PROJECT_CURATION, snapshot);
 
-  const chunks = buildChunks(sections);
+  const chunks = buildChunks(content, sections);
   console.log(`[search-index-builder] Built ${chunks.length} chunk(s).`);
 
   console.log(`[search-index-builder] Loading ${MODEL_ID} and generating embeddings (local, ONNX)...`);
