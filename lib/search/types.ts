@@ -11,7 +11,7 @@ import { SECTION_IDS, type SectionId } from "../../data/content";
 export const SEARCH_INDEX_DIMENSIONS = 384;
 
 export interface SearchChunk {
-  /** Stable id — see scripts/build-search-index.ts for the exact id scheme per section. */
+  /** Stable id — see tools/search-index-builder/build.ts for the exact id scheme per section. */
   id: string;
   section: SectionId;
   title: string;

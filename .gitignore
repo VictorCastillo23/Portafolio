@@ -2,6 +2,9 @@
 
 # dependencies
 /node_modules
+# tools/search-index-builder has its own isolated dependency graph
+# (deliberately not a root workspace member) — ignore its node_modules too.
+tools/**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
