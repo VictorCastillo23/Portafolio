@@ -1,0 +1,17 @@
+{
+  "name": "search-index-builder",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Isolated CLI tool that regenerates the root repo's data/search-index.json. Deliberately kept OUT of the root package.json's dependency graph so @huggingface/transformers (and its onnxruntime-node / sharp transitive deps) never affect the deployed app's npm install or npm audit surface. Run via `npm run build:search-index` from the repo root — never wired into any build/deploy step.",
+  "scripts": {
+    "build": "tsx build.ts"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.13",
+    "typescript": "^5"
+  }
+}

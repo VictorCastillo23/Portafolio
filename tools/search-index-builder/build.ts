@@ -1,37 +1,66 @@
-// Builds the committed data/search-index.json artifact from data/content.ts
-// and the merged project data (data/projects.ts + data/github-repos.json).
+// Builds the root repo's committed data/search-index.json artifact from
+// data/content.ts and the merged project data (data/projects.ts +
+// data/github-repos.json).
 //
-// Run manually via `npm run build:search-index` — NEVER wired into
-// `prebuild`/`build` (spec CI-4, locked user decision). Embeddings are
-// generated locally via an ONNX multilingual model (spec CI-2): the script
-// itself never calls an external embeddings API. Downloading the model's own
-// weights on first run is a one-time tooling asset fetch (cached under
-// node_modules/@huggingface/transformers/.cache/, already gitignored via
-// /node_modules) — not a per-embedding network call.
+// Lives in its OWN isolated package (tools/search-index-builder/) so
+// @huggingface/transformers — and its onnxruntime-node / sharp transitive
+// deps — never enter the root app's package.json/package-lock.json. The root
+// app's `npm install` and `npm audit` never see this tool's dependencies;
+// only running this tool directly (`npm run build:search-index` from the
+// repo root, which shells out here) does. Root-level TypeScript/ESLint/build
+// tooling is configured to skip this directory entirely (see root
+// tsconfig.json's "exclude" and eslint.config.mjs's globalIgnores).
+//
+// Run manually via `npm run build:search-index` from the repo root — NEVER
+// wired into `prebuild`/`build` (spec CI-4, locked user decision). Embeddings
+// are generated locally via an ONNX multilingual model (spec CI-2): the
+// script itself never calls an external embeddings API. Downloading the
+// model's own weights on first run is a one-time tooling asset fetch (cached
+// under this package's own node_modules/@huggingface/transformers/.cache/,
+// gitignored) — not a per-embedding network call.
 //
 // Fails closed: all chunking, embedding, and neighbor-graph computation
 // happens in memory first; the committed artifact is only overwritten after
 // every step succeeds, mirroring scripts/fetch-github.ts's fail-closed shape.
+//
+// Imports below reach across the package boundary into the root repo's
+// data/ and lib/ directories via plain relative paths — this is safe and
+// intentional: those files are pure TypeScript with no dependency on
+// anything in the root's node_modules (or this package's), only on
+// TypeScript itself, which this package provides via its own devDependency.
+// Phase 2 (lib/search/chunks.ts, task 2.1) will extract buildChunks() below
+// into the root's lib/search/chunks.ts; once that lands, this file's local
+// buildChunks()/jobChunk()/credentialChunk()/projectChunk()/slugify()/
+// anchorFor() should be replaced with an import of that root module instead
+// (same cross-boundary relative-import pattern, just importing a function
+// instead of duplicating its logic).
 
 import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { pipeline } from "@huggingface/transformers";
-import { content, SECTION_IDS, type Job, type Credential, type SectionId } from "../data/content";
-import { PROJECT_CURATION } from "../data/projects";
-import { mergeProjects, parseSnapshot, type Project, type ProjectSections } from "../lib/projects";
+import {
+  content,
+  SECTION_IDS,
+  type Job,
+  type Credential,
+  type SectionId,
+} from "../../data/content";
+import { PROJECT_CURATION } from "../../data/projects";
+import { mergeProjects, parseSnapshot, type Project, type ProjectSections } from "../../lib/projects";
 import {
   SEARCH_INDEX_DIMENSIONS,
   type IndexedChunk,
   type SearchChunk,
   type SearchIndex,
-} from "../lib/search/types";
+} from "../../lib/search/types";
 
 const MODEL_ID = "Xenova/paraphrase-multilingual-MiniLM-L12-v2";
 const NEIGHBOR_COUNT = 3;
 const EMBEDDING_PRECISION = 6;
 
-const SNAPSHOT_PATH = path.resolve(import.meta.dirname, "../data/github-repos.json");
-const OUTPUT_PATH = path.resolve(import.meta.dirname, "../data/search-index.json");
+const ROOT_DIR = path.resolve(import.meta.dirname, "../..");
+const SNAPSHOT_PATH = path.resolve(ROOT_DIR, "data/github-repos.json");
+const OUTPUT_PATH = path.resolve(ROOT_DIR, "data/search-index.json");
 
 /**
  * Deterministic ascii-ish slug for credential ids — credentials have no `id`
@@ -89,11 +118,10 @@ function projectChunk(project: Project): SearchChunk {
 }
 
 /**
- * Pure chunk mapper — kept inline for Phase 1. Phase 2 (lib/search/chunks.ts,
- * task 2.1) extracts this into a standalone, independently unit-tested
- * `buildChunks()` per HR-1; the design's data-flow diagram already names it
- * that way. This function is written to be lift-and-shift ready for that
- * extraction.
+ * Pure chunk mapper — kept inline here for Phase 1. Phase 2
+ * (lib/search/chunks.ts, task 2.1) extracts this into a standalone,
+ * independently unit-tested `buildChunks()` in the root repo per HR-1; this
+ * file should then import it instead of defining its own copy.
  */
 function buildChunks(sections: ProjectSections): SearchChunk[] {
   const chunks: SearchChunk[] = [
@@ -145,14 +173,14 @@ function buildChunks(sections: ProjectSections): SearchChunk[] {
   const seenIds = new Set<string>();
   for (const chunk of chunks) {
     if (seenIds.has(chunk.id)) {
-      throw new Error(`[build-search-index] Duplicate chunk id detected: "${chunk.id}".`);
+      throw new Error(`[search-index-builder] Duplicate chunk id detected: "${chunk.id}".`);
     }
     seenIds.add(chunk.id);
     if (!SECTION_IDS.includes(chunk.section)) {
-      throw new Error(`[build-search-index] Unknown section "${chunk.section}" on chunk "${chunk.id}".`);
+      throw new Error(`[search-index-builder] Unknown section "${chunk.section}" on chunk "${chunk.id}".`);
     }
     if (chunk.text.trim().length === 0) {
-      throw new Error(`[build-search-index] Chunk "${chunk.id}" has empty text.`);
+      throw new Error(`[search-index-builder] Chunk "${chunk.id}" has empty text.`);
     }
   }
 
@@ -214,9 +242,9 @@ async function buildIndex(): Promise<SearchIndex> {
   const sections = mergeProjects(PROJECT_CURATION, snapshot);
 
   const chunks = buildChunks(sections);
-  console.log(`[build-search-index] Built ${chunks.length} chunk(s).`);
+  console.log(`[search-index-builder] Built ${chunks.length} chunk(s).`);
 
-  console.log(`[build-search-index] Loading ${MODEL_ID} and generating embeddings (local, ONNX)...`);
+  console.log(`[search-index-builder] Loading ${MODEL_ID} and generating embeddings (local, ONNX)...`);
   const embeddings = await embedChunks(chunks);
 
   const neighborGraph = buildNeighborGraph(chunks, embeddings);
@@ -244,11 +272,11 @@ async function main(): Promise<void> {
   // its committed size for no readability benefit.
   await writeFile(OUTPUT_PATH, `${JSON.stringify(index)}\n`, "utf8");
   console.log(
-    `[build-search-index] Wrote ${index.chunks.length} chunk(s) to ${path.relative(process.cwd(), OUTPUT_PATH)}`,
+    `[search-index-builder] Wrote ${index.chunks.length} chunk(s) to ${path.relative(ROOT_DIR, OUTPUT_PATH)}`,
   );
 }
 
 main().catch((error: unknown) => {
-  console.error("[build-search-index] Unexpected error — search-index.json NOT written.", error);
+  console.error("[search-index-builder] Unexpected error — search-index.json NOT written.", error);
   process.exit(1);
 });
