@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #14101b;
+  --color-surface: #1e1828;
+  --color-line: #3a3350;
+  --color-text: #ede7f2;
+  --color-muted: #a79fb4;
+  --color-accent: #ffb35c;
+
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-text);
+}
+
+/* Every section is a scroll-spy / anchor target; keep it clear of the fixed nav. */
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @keyframes riseIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-rise-in {
+    animation: riseIn 500ms ease-out both;
+  }
+
+  /* Staggered entrance delays for Hero's own elements (design Part 1.3 Step/
+     Delay table, steps 1-5: eyebrow/name/tagline/blurb/cta). Steps 0 and 6
+     (Nav, sidebars) belong to their own components. */
+  .animate-rise-in-100 {
+    animation: riseIn 500ms ease-out 100ms both;
+  }
+  .animate-rise-in-200 {
+    animation: riseIn 500ms ease-out 200ms both;
+  }
+  .animate-rise-in-300 {
+    animation: riseIn 500ms ease-out 300ms both;
+  }
+  .animate-rise-in-400 {
+    animation: riseIn 500ms ease-out 400ms both;
+  }
+  .animate-rise-in-500 {
+    animation: riseIn 500ms ease-out 500ms both;
+  }
+}

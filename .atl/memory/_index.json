@@ -1,0 +1,71 @@
+[
+  {
+    "id": 188,
+    "title": "sdd-init/portafolio",
+    "topic_key": "sdd-init/portafolio",
+    "file": "sdd-init-portafolio.md",
+    "type": "architecture"
+  },
+  {
+    "id": 189,
+    "title": "sdd/portafolio/testing-capabilities",
+    "topic_key": "sdd/portafolio/testing-capabilities",
+    "file": "sdd-portafolio-testing-capabilities.md",
+    "type": "config"
+  },
+  {
+    "id": 190,
+    "title": "skill-registry",
+    "topic_key": "skill-registry",
+    "file": "skill-registry.md",
+    "type": "config"
+  },
+  {
+    "id": 191,
+    "title": "sdd/portfolio-nextjs-app/explore",
+    "topic_key": "sdd/portfolio-nextjs-app/explore",
+    "file": "sdd-portfolio-nextjs-app-explore.md",
+    "type": "architecture"
+  },
+  {
+    "id": 192,
+    "title": "sdd/portfolio-nextjs-app/proposal",
+    "topic_key": "sdd/portfolio-nextjs-app/proposal",
+    "file": "sdd-portfolio-nextjs-app-proposal.md",
+    "type": "architecture"
+  },
+  {
+    "id": 193,
+    "title": "sdd/portfolio-nextjs-app/spec",
+    "topic_key": "sdd/portfolio-nextjs-app/spec",
+    "file": "sdd-portfolio-nextjs-app-spec.md",
+    "type": "architecture"
+  },
+  {
+    "id": 194,
+    "title": "sdd/portfolio-nextjs-app/design",
+    "topic_key": "sdd/portfolio-nextjs-app/design",
+    "file": "sdd-portfolio-nextjs-app-design.md",
+    "type": "architecture"
+  },
+  {
+    "id": 195,
+    "title": "sdd/portfolio-nextjs-app/tasks",
+    "topic_key": "sdd/portfolio-nextjs-app/tasks",
+    "file": "sdd-portfolio-nextjs-app-tasks.md",
+    "type": "architecture"
+  },
+  {
+    "id": 196,
+    "title": "sdd/portfolio-nextjs-app/apply-progress",
+    "topic_key": "sdd/portfolio-nextjs-app/apply-progress",
+    "file": "sdd-portfolio-nextjs-app-apply-progress.md",
+    "type": "architecture"
+  },
+  {
+    "id": 197,
+    "title": "Phase 3 lib/projects.ts TDD implementation, review-budget risk on PR3",
+    "file": "197-phase-3-lib-projects.ts-tdd-implementation-review-budget-risk-on-pr3.md",
+    "type": "discovery"
+  }
+]
