@@ -10,6 +10,8 @@ const ALL_ICON_NAMES: readonly IconName[] = [
   "external",
   "folder",
   "code",
+  "chat",
+  "send",
 ];
 
 describe("Icon", () => {

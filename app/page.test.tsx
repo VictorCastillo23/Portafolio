@@ -5,12 +5,16 @@
 // only asserts composition, not per-section content.
 
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SECTION_IDS } from "../data/content";
 import { expectNoA11yViolations } from "../vitest.setup";
 import Home from "./page";
 
 describe("Home", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("renders every section from SECTION_IDS, in document order", () => {
     const { container } = render(<Home />);
 
@@ -39,5 +43,25 @@ describe("Home", () => {
   it("has no accessibility violations", async () => {
     const { container } = render(<Home />);
     await expectNoA11yViolations(container);
+  });
+
+  it("does not mount the chat widget when ANTHROPIC_API_KEY is absent (CW-2)", () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+
+    render(<Home />);
+
+    expect(screen.queryByRole("button", { name: "Abrir chat" })).not.toBeInTheDocument();
+  });
+
+  it("mounts the chat widget launcher when ANTHROPIC_API_KEY is present, without adding a SECTION_IDS entry", () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-fake-key-for-build-check");
+
+    const { container } = render(<Home />);
+
+    expect(screen.getByRole("button", { name: "Abrir chat" })).toBeInTheDocument();
+    // The widget is chrome, not a page section: it must not appear in SECTION_IDS
+    // nor break the locked section-order assertion above.
+    const sectionElements = SECTION_IDS.map((id) => container.querySelector(`#${id}`));
+    expect(sectionElements.every((element) => element !== null)).toBe(true);
   });
 });

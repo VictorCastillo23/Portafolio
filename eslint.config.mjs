@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Isolated tooling package with its own dependency graph — see
+    // tools/search-index-builder/package.json.
+    "tools/**",
   ]),
 ]);
 

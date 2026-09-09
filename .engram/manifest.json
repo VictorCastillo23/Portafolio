@@ -8,6 +8,14 @@
       "sessions": 1,
       "memories": 10,
       "prompts": 0
+    },
+    {
+      "id": "ccb7a123",
+      "created_by": "vcastillo",
+      "created_at": "2026-09-08T20:23:02Z",
+      "sessions": 0,
+      "memories": 8,
+      "prompts": 0
     }
   ]
 }

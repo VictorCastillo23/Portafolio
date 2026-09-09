@@ -19,13 +19,23 @@ import { Experience } from "../components/sections/Experience";
 import { Credentials } from "../components/sections/Credentials";
 import { Projects } from "../components/sections/Projects";
 import { Contact } from "../components/sections/Contact";
+import { ChatWidget } from "../components/chat/ChatWidget";
 
 export default function Home() {
+  // Chat widget is gated server-side on ANTHROPIC_API_KEY being present
+  // (design "Env absence" decision: no NEXT_PUBLIC_* flag, so the check
+  // happens here and the widget's code/markup never reach the client
+  // bundle or HTML when the key is absent). It is chrome, not a page
+  // section, so it deliberately does NOT get a SECTION_IDS entry and
+  // mounts outside <main>, alongside the other persistent layout chrome.
+  const isChatEnabled = Boolean(process.env.ANTHROPIC_API_KEY);
+
   return (
     <>
       <Nav />
       <SocialSidebar />
       <EmailSidebar />
+      {isChatEnabled ? <ChatWidget /> : null}
 
       <main>
         <Hero />
