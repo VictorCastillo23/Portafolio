@@ -1,13 +1,24 @@
-// Shared inline SVG icon set (design Part 4). Deliberately scoped to exactly
-// the six icons the design calls for: github, linkedin, mail, external,
-// folder, code. Icons are always decorative (aria-hidden) — the accessible
-// name for any icon-only control belongs on the wrapping <a>/<button> via
-// aria-label, per the accessibility skill's "icon buttons need accessible
-// names" guidance.
+// Shared inline SVG icon set (design Part 4, extended by the chat widget —
+// tasks 6.1). Originally scoped to exactly the six icons the design called
+// for: github, linkedin, mail, external, folder, code. `chat` and `send`
+// were added for the RAG chat widget's launcher button and composer submit
+// button, matching the same Feather-style stroke-based convention (source:
+// Feather's `message-circle` and `send` icons). Icons are always decorative
+// (aria-hidden) — the accessible name for any icon-only control belongs on
+// the wrapping <a>/<button> via aria-label, per the accessibility skill's
+// "icon buttons need accessible names" guidance.
 
 import type { ReactNode } from "react";
 
-export type IconName = "github" | "linkedin" | "mail" | "external" | "folder" | "code";
+export type IconName =
+  | "github"
+  | "linkedin"
+  | "mail"
+  | "external"
+  | "folder"
+  | "code"
+  | "chat"
+  | "send";
 
 interface IconProps {
   name: IconName;
@@ -43,6 +54,15 @@ const ICON_PATHS: Record<IconName, ReactNode> = {
     <>
       <path d="m16 18 6-6-6-6" />
       <path d="m8 6-6 6 6 6" />
+    </>
+  ),
+  chat: (
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z" />
+  ),
+  send: (
+    <>
+      <path d="M22 2 11 13" />
+      <path d="M22 2 15 22l-4-9-9-4z" />
     </>
   ),
 };
