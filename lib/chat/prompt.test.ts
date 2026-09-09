@@ -48,6 +48,16 @@ describe("buildSystemPrompt", () => {
     expect(prompt).not.toMatch(/never (share|state|give|provide).*(email|phone)/i);
   });
 
+  it("forbids inventing placeholder contact info when it is not present in the context", () => {
+    expect(prompt).toMatch(/verbatim|exactly as (it appears|written)/i);
+    expect(prompt).toMatch(/do not (invent|fabricate|make up|write a placeholder)/i);
+  });
+
+  it("instructs the assistant to refer to Victor in the third person, never as the visitor", () => {
+    expect(prompt).toMatch(/third person/i);
+    expect(prompt).toMatch(/visitor is not Victor|not addressing Victor|regardless of how the visitor phrases/i);
+  });
+
   it("favors longer, detailed technical answers over short summaries", () => {
     expect(prompt).toMatch(/longer|detailed|depth|thorough/i);
   });
