@@ -49,8 +49,10 @@ Para habilitar el chat en un entorno propio, copiá `.env.example` a
 |---|---|
 | `ANTHROPIC_API_KEY` | Habilita el chat. Si falta, el widget no se monta (chequeado server-side en `app/page.tsx`, nunca expuesto al cliente). |
 | `ANTHROPIC_MODEL` | Modelo de Claude a usar. Si no se define, usa un default razonable (ver `lib/chat/`). |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Credenciales de una base gratuita en [Upstash](https://upstash.com), usadas para el límite diario de mensajes compartido entre todos los visitantes. |
-| `CHAT_DAILY_BUDGET` | Cantidad máxima de mensajes por día (UTC). Default: 200 si no se define. |
+
+El límite de mensajes ya no lo maneja la app: se controla directamente desde
+la consola de Anthropic (a nivel de cuenta/API key), así que no hay ninguna
+variable de entorno adicional para configurar eso acá.
 
 ### Checklist de pruebas manuales
 
@@ -72,6 +74,9 @@ el chat habilitado conviene probar esto a mano:
       retrieval).
 - [ ] Encadenar una segunda pregunta de seguimiento en el mismo hilo y
       confirmar que el asistente mantiene el contexto de la conversación.
+- [ ] Confirmar que un error real del lado de Claude durante el streaming
+      (por ejemplo, cortando la conexión) se muestra como un mensaje de
+      error genérico en el widget, no como un estado especial.
 - [ ] Con las variables de entorno del chat SIN configurar, correr
       `npm run build` y confirmar que: (a) el build termina sin errores,
       (b) `/` sigue siendo completamente estático, y (c) el HTML generado

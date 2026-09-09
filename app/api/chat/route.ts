@@ -1,25 +1,26 @@
 // POST /api/chat — Route Handler (design "Interfaces / Contracts", "Data
-// Flow"). Wires the 3 independently-tested `lib/` modules together; per the
+// Flow"). Wires the independently-tested `lib/` modules together; per the
 // design's "route stays thin" principle, this file is orchestration only —
-// no retrieval/budget/prompt/SSE business logic lives here.
+// no retrieval/prompt/SSE business logic lives here.
 //
 // Request lifecycle, in order (design "Data Flow"):
 //   1. parseChatRequest()          invalid  -> 400 invalid_request
 //   2. required env present?       no       -> 503 chat_unavailable
-//   3. checkAndIncrementBudget()   BEFORE any retrieval or Claude call —
-//      search and generation share ONE budget (locked decision).
-//      !allowed -> 429 budget_exhausted, ZERO Claude calls made.
-//   4. retrieve() against the committed data/search-index.json
-//   5. buildSystemPrompt() + buildContextBlock()
-//   6. anthropic.messages.stream() — client instantiated INSIDE the
-//      request handler (never at module scope, mirroring Phase 3's Upstash
-//      Redis client), so `next build` succeeds even when
-//      ANTHROPIC_API_KEY is absent.
-//   7. sources -> delta* -> done, SSE-encoded via lib/chat/stream.ts. A
+//   3. retrieve() against the committed data/search-index.json
+//   4. buildSystemPrompt() + buildContextBlock()
+//   5. anthropic.messages.stream() — client instantiated INSIDE the
+//      request handler (never at module scope), so `next build` succeeds
+//      even when ANTHROPIC_API_KEY is absent.
+//   6. sources -> delta* -> done, SSE-encoded via lib/chat/stream.ts. A
 //      failure DURING the Claude stream itself is NOT surfaced as an HTTP
 //      error status — the 200 + SSE headers are already committed by then —
 //      it is emitted as a terminal `error` event instead (design: "error
 //      ... mid-stream only").
+//
+// Request limits are intentionally NOT enforced at this layer. That is
+// deferred entirely to Anthropic's own account and API-key level
+// enforcement, configured directly in the Anthropic Console, by explicit
+// product decision.
 
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -27,7 +28,6 @@ import rawSearchIndex from "../../../data/search-index.json";
 import { buildContextBlock, buildSystemPrompt, DEFAULT_MAX_TOKENS } from "../../../lib/chat/prompt";
 import { parseChatRequest, type ChatHistoryEntry } from "../../../lib/chat/request";
 import { toSseStream, type ChatSource, type ChatSseEvent } from "../../../lib/chat/stream";
-import { checkAndIncrementBudget } from "../../../lib/rate-limit/budget";
 import { retrieve, type RetrievedChunk } from "../../../lib/search/retrieve";
 import { parseSearchIndex } from "../../../lib/search/types";
 
@@ -37,7 +37,7 @@ export const runtime = "nodejs";
  * Small/fast Claude tier, per the design's cost-consciousness decision
  * ("defaulting to the current small/fast Claude model"). `claude-haiku-4-5`
  * is the fast/cheap tier in Anthropic's current model lineup — a good fit
- * for a public, unauthenticated, budget-capped endpoint. The Messages API
+ * for a public, unauthenticated endpoint. The Messages API
  * requires the exact dated model id, not the bare family alias — using
  * `claude-haiku-4-5` alone returns a "model not found" error. Overridable
  * via `ANTHROPIC_MODEL` (documented in `.env.example`).
@@ -63,20 +63,10 @@ export async function POST(request: Request): Promise<Response> {
     return jsonError(400, "invalid_request", parsed.error);
   }
 
-  // Checked before any Upstash/Anthropic call so the site (and this route's
-  // own 503) works with chat entirely unconfigured.
+  // Checked before any Anthropic call so the site (and this route's own
+  // 503) works with chat entirely unconfigured.
   if (!process.env.ANTHROPIC_API_KEY) {
     return jsonError(503, "chat_unavailable", "Chat is not configured on this deployment.");
-  }
-
-  // Locked decision: search and generation share ONE budget. Checked BEFORE
-  // any retrieval or Claude call — an exhausted budget costs nothing beyond
-  // this single Upstash round trip.
-  const budget = await checkAndIncrementBudget();
-  if (!budget.allowed) {
-    return jsonError(429, "budget_exhausted", "Daily chat budget exhausted. Try again after the reset.", {
-      resetAt: budget.resetAt,
-    });
   }
 
   const { message, history } = parsed.value;
@@ -105,7 +95,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const responseBody = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const events = streamChatEvents(anthropic, model, systemPrompt, messages, chunks, budget.remaining);
+      const events = streamChatEvents(anthropic, model, systemPrompt, messages, chunks);
       for await (const bytes of toSseStream(events)) {
         controller.enqueue(bytes);
       }
@@ -135,10 +125,10 @@ function buildAnthropicMessages(
 /**
  * Drives the actual Claude call and yields the SSE event sequence:
  * `sources` (always first, from retrieval — before Claude is even called),
- * then `delta` per text chunk, then `done` with the pre-computed remaining
- * budget. A stream-level failure (network error, API error) yields a
- * terminal `error` event instead of throwing, since the response's 200
- * status and SSE headers are already committed by the time this runs.
+ * then `delta` per text chunk, then a terminal `done`. A stream-level
+ * failure (network error, API error) yields a terminal `error` event
+ * instead of throwing, since the response's 200 status and SSE headers are
+ * already committed by the time this runs.
  */
 async function* streamChatEvents(
   anthropic: Anthropic,
@@ -146,7 +136,6 @@ async function* streamChatEvents(
   systemPrompt: string,
   messages: Anthropic.MessageParam[],
   chunks: RetrievedChunk[],
-  remaining: number,
 ): AsyncGenerator<ChatSseEvent> {
   yield { type: "sources", sources: chunks.map(toChatSource) };
 
@@ -172,7 +161,7 @@ async function* streamChatEvents(
     return;
   }
 
-  yield { type: "done", remaining };
+  yield { type: "done" };
 }
 
 function toChatSource(chunk: RetrievedChunk): ChatSource {

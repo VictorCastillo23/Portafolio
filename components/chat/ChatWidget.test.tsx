@@ -1,8 +1,12 @@
 // Render/interaction/a11y smoke tests for ChatWidget (presentational
 // shell — the real logic lives in useChatStream's own TDD suite; tasks
 // 6.4/6.5). `useChatStream` is mocked so each test can drive a specific
-// wireframe state (closed / open-first-time / open-answering /
-// budget-exhausted / mobile-sheet) without a real fetch/SSE round trip.
+// wireframe state (closed / open-first-time / open-answering / error /
+// mobile-sheet) without a real fetch/SSE round trip.
+//
+// App-level request limiting (and its old exhausted-limit UI state) was
+// removed by explicit product decision; limits are now handled entirely by
+// Anthropic outside this app.
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -21,7 +25,6 @@ function stubStream(overrides: Partial<UseChatStreamResult> = {}): void {
     messages: [],
     status: "idle",
     errorMessage: null,
-    budgetResetAt: null,
     sendMessage: vi.fn(),
     ...overrides,
   });
@@ -84,20 +87,6 @@ describe("ChatWidget", () => {
     expect(screen.getByLabelText("Escribe tu pregunta")).toBeDisabled();
     expect(screen.getByRole("button", { name: "Enviar mensaje" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "¿Cómo puedo contactarte?" })).not.toBeInTheDocument();
-  });
-
-  it("budget-exhausted: shows an inline notice instead of the composer, not a toast or modal", () => {
-    stubStream({
-      status: "budget-exhausted",
-      budgetResetAt: "2026-09-09T00:00:00.000Z",
-      messages: [{ id: "1", role: "user", content: "Hola" }],
-    });
-    render(<ChatWidget />);
-    fireEvent.click(screen.getByRole("button", { name: "Abrir chat" }));
-
-    expect(screen.getByText(/límite diario de mensajes/)).toBeInTheDocument();
-    expect(screen.queryByLabelText("Escribe tu pregunta")).not.toBeInTheDocument();
-    expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "false");
   });
 
   it("mobile-sheet: the panel carries near-full-screen mobile classes with a corner-panel override at md+", () => {

@@ -3,7 +3,7 @@
 //
 //   event: sources  data: {"sources":[{"id","section","title","anchor","url"}]}
 //   event: delta    data: {"text":"..."}
-//   event: done     data: {"remaining":143}
+//   event: done     data: {}
 //   event: error    data: {"code":"upstream_error","message":"..."}   // mid-stream only
 //
 // Pure encoding + a pure stream-transform helper only. No network calls, no
@@ -23,7 +23,7 @@ export interface ChatSource {
 export type ChatSseEvent =
   | { type: "sources"; sources: ChatSource[] }
   | { type: "delta"; text: string }
-  | { type: "done"; remaining: number }
+  | { type: "done" }
   | { type: "error"; code: string; message: string };
 
 /**
@@ -44,7 +44,7 @@ function toPayload(event: ChatSseEvent): Record<string, unknown> {
     case "delta":
       return { text: event.text };
     case "done":
-      return { remaining: event.remaining };
+      return {};
     case "error":
       return { code: event.code, message: event.message };
   }

@@ -3,7 +3,7 @@
 //
 //   event: sources  data: {"sources":[{"id","section","title","anchor","url"}]}
 //   event: delta    data: {"text":"..."}
-//   event: done     data: {"remaining":143}
+//   event: done     data: {}
 //   event: error    data: {"code":"upstream_error","message":"..."}   // mid-stream only
 //
 // Pure encoding only — no network, no Anthropic SDK. `toSseStream` is fed a
@@ -54,10 +54,10 @@ describe("sseEncode", () => {
     expect(encoded).toBe(`event: delta\ndata: ${JSON.stringify({ text: "Hola, " })}\n\n`);
   });
 
-  it("encodes a done event carrying the remaining budget", () => {
-    const encoded = sseEncode({ type: "done", remaining: 143 });
+  it("encodes a done event with an empty payload", () => {
+    const encoded = sseEncode({ type: "done" });
 
-    expect(encoded).toBe(`event: done\ndata: ${JSON.stringify({ remaining: 143 })}\n\n`);
+    expect(encoded).toBe(`event: done\ndata: ${JSON.stringify({})}\n\n`);
   });
 
   it("encodes a mid-stream error event", () => {
@@ -82,7 +82,7 @@ describe("toSseStream", () => {
       },
       { type: "delta", text: "Hola" },
       { type: "delta", text: " mundo" },
-      { type: "done", remaining: 199 },
+      { type: "done" },
     ];
 
     const output = await collect(toSseStream(toAsyncIterable(events)));

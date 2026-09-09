@@ -8,10 +8,13 @@
 // `lib/chat/stream.ts` already encodes — as a type-only import: no runtime
 // code from that server module ships in the client bundle, only the shape.
 //
-// Status state machine: idle -> streaming -> (idle | error | budget-exhausted).
-// A 429 response never reaches the SSE parser at all (per design, an
-// exhausted budget makes zero Claude calls, so there is nothing to stream);
-// it is a plain JSON body read via response.json().
+// Status state machine: idle -> streaming -> (idle | error).
+//
+// App-level request limiting was removed by explicit product decision.
+// Limits are enforced solely by Anthropic at the account/API-key level; any
+// non-OK response from the route (400, 503, or anything else) is handled
+// through the same generic `error` status, read as a plain JSON body via
+// response.json().
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { ChatSource, ChatSseEvent } from "../../lib/chat/stream";
@@ -25,14 +28,12 @@ export interface ChatUIMessage {
   streaming?: boolean;
 }
 
-export type ChatStreamStatus = "idle" | "streaming" | "error" | "budget-exhausted";
+export type ChatStreamStatus = "idle" | "streaming" | "error";
 
 export interface UseChatStreamResult {
   messages: ChatUIMessage[];
   status: ChatStreamStatus;
   errorMessage: string | null;
-  /** ISO timestamp from the 429 body's `resetAt`, only set while budget-exhausted. */
-  budgetResetAt: string | null;
   sendMessage: (text: string) => Promise<void>;
 }
 
@@ -40,7 +41,6 @@ export function useChatStream(): UseChatStreamResult {
   const [messages, setMessages] = useState<ChatUIMessage[]>([]);
   const [status, setStatus] = useState<ChatStreamStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [budgetResetAt, setBudgetResetAt] = useState<string | null>(null);
 
   // Read synchronously inside sendMessage (which can be called again before
   // a re-render lands the latest `messages` closure) instead of depending on
@@ -72,7 +72,6 @@ export function useChatStream(): UseChatStreamResult {
       setMessages((previous) => [...previous, { id: nextId(), role: "user", content: trimmed }]);
       setStatus("streaming");
       setErrorMessage(null);
-      setBudgetResetAt(null);
 
       let response: Response;
       try {
@@ -89,13 +88,8 @@ export function useChatStream(): UseChatStreamResult {
 
       if (!response.ok) {
         const body = await safeParseJson(response);
-        if (response.status === 429) {
-          setStatus("budget-exhausted");
-          setBudgetResetAt(typeof body?.resetAt === "string" ? body.resetAt : null);
-        } else {
-          setStatus("error");
-          setErrorMessage(typeof body?.message === "string" ? body.message : "Ocurrió un error inesperado.");
-        }
+        setStatus("error");
+        setErrorMessage(typeof body?.message === "string" ? body.message : "Ocurrió un error inesperado.");
         return;
       }
 
@@ -118,7 +112,7 @@ export function useChatStream(): UseChatStreamResult {
     [status, nextId],
   );
 
-  return { messages, status, errorMessage, budgetResetAt, sendMessage };
+  return { messages, status, errorMessage, sendMessage };
 }
 
 function applyEvent(
@@ -241,7 +235,7 @@ function toChatSseEvent(eventName: string, data: unknown): ChatSseEvent | null {
     case "delta":
       return typeof payload.text === "string" ? { type: "delta", text: payload.text } : null;
     case "done":
-      return typeof payload.remaining === "number" ? { type: "done", remaining: payload.remaining } : null;
+      return { type: "done" };
     case "error":
       return typeof payload.code === "string" && typeof payload.message === "string"
         ? { type: "error", code: payload.code, message: payload.message }

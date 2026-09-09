@@ -73,7 +73,7 @@ describe("useChatStream", () => {
         { type: "sources", sources: [{ id: "about-summary", section: "about", title: "Sobre mí", anchor: "#about", url: null }] },
         { type: "delta", text: "Hola" },
         { type: "delta", text: " mundo" },
-        { type: "done", remaining: 142 },
+        { type: "done" },
       ]),
     );
     vi.stubGlobal("fetch", fetchMock);
@@ -111,14 +111,14 @@ describe("useChatStream", () => {
         sseResponse([
           { type: "sources", sources: [] },
           { type: "delta", text: "Primera respuesta" },
-          { type: "done", remaining: 199 },
+          { type: "done" },
         ]),
       )
       .mockResolvedValueOnce(
         sseResponse([
           { type: "sources", sources: [] },
           { type: "delta", text: "Segunda respuesta" },
-          { type: "done", remaining: 198 },
+          { type: "done" },
         ]),
       );
     vi.stubGlobal("fetch", fetchMock);
@@ -142,14 +142,13 @@ describe("useChatStream", () => {
     ]);
   });
 
-  it("sets budget-exhausted status and resetAt from a 429 response, without touching messages", async () => {
+  it("sets a generic error status and message from a non-OK JSON response", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(
-        jsonErrorResponse(429, {
-          code: "budget_exhausted",
-          message: "Daily chat budget exhausted.",
-          resetAt: "2026-09-09T00:00:00.000Z",
+        jsonErrorResponse(503, {
+          code: "chat_unavailable",
+          message: "Chat is not configured on this deployment.",
         }),
       );
     vi.stubGlobal("fetch", fetchMock);
@@ -160,8 +159,8 @@ describe("useChatStream", () => {
       await result.current.sendMessage("hola");
     });
 
-    await waitFor(() => expect(result.current.status).toBe("budget-exhausted"));
-    expect(result.current.budgetResetAt).toBe("2026-09-09T00:00:00.000Z");
+    await waitFor(() => expect(result.current.status).toBe("error"));
+    expect(result.current.errorMessage).toBe("Chat is not configured on this deployment.");
   });
 
   it("marks the in-progress message as no longer streaming and surfaces a mid-stream error event", async () => {

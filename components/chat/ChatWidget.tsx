@@ -28,22 +28,13 @@ const EXAMPLE_QUESTIONS = [
   "¿Cómo puedo contactarte?",
 ];
 
-function formatResetTime(resetAt: string): string {
-  try {
-    return new Date(resetAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return resetAt;
-  }
-}
-
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState("");
-  const { messages, status, errorMessage, budgetResetAt, sendMessage } = useChatStream();
+  const { messages, status, errorMessage, sendMessage } = useChatStream();
 
-  const isBudgetExhausted = status === "budget-exhausted";
   const isStreaming = status === "streaming";
   const isFirstOpen = messages.length === 0;
 
@@ -154,36 +145,29 @@ export function ChatWidget() {
             </p>
           ) : null}
 
-          {isBudgetExhausted ? (
-            <p className="border-t border-line px-4 py-3 text-sm text-muted">
-              Se alcanzó el límite diario de mensajes.
-              {budgetResetAt ? ` Intenta de nuevo después de las ${formatResetTime(budgetResetAt)}.` : " Intenta de nuevo más tarde."}
-            </p>
-          ) : (
-            <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-line p-3">
-              <label htmlFor="chat-widget-input" className="sr-only">
-                Escribe tu pregunta
-              </label>
-              <input
-                id="chat-widget-input"
-                ref={inputRef}
-                type="text"
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                disabled={isStreaming}
-                placeholder="Escribe tu pregunta..."
-                className="flex-1 rounded-md border border-line bg-ink px-3 py-2 text-sm text-text placeholder:text-muted focus:border-accent focus:outline-none disabled:opacity-60"
-              />
-              <button
-                type="submit"
-                aria-label="Enviar mensaje"
-                disabled={isStreaming || draft.trim().length === 0}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-ink disabled:opacity-40"
-              >
-                <Icon name="send" className="h-4 w-4" />
-              </button>
-            </form>
-          )}
+          <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-line p-3">
+            <label htmlFor="chat-widget-input" className="sr-only">
+              Escribe tu pregunta
+            </label>
+            <input
+              id="chat-widget-input"
+              ref={inputRef}
+              type="text"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              disabled={isStreaming}
+              placeholder="Escribe tu pregunta..."
+              className="flex-1 rounded-md border border-line bg-ink px-3 py-2 text-sm text-text placeholder:text-muted focus:border-accent focus:outline-none disabled:opacity-60"
+            />
+            <button
+              type="submit"
+              aria-label="Enviar mensaje"
+              disabled={isStreaming || draft.trim().length === 0}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-ink disabled:opacity-40"
+            >
+              <Icon name="send" className="h-4 w-4" />
+            </button>
+          </form>
         </div>
       ) : null}
     </>
