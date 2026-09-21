@@ -227,14 +227,14 @@ describe("buildChunks", () => {
 });
 
 describe("contract: buildChunks matches the committed data/search-index.json", () => {
-  it("produces the same 18 chunks (id/section/title/text/anchor/url) as the committed artifact", () => {
+  it("produces the same 19 chunks (id/section/title/text/anchor/url) as the committed artifact", () => {
     const realSnapshot = parseSnapshot(realSnapshotRaw);
     const realSections = mergeProjects(PROJECT_CURATION, realSnapshot);
     const realIndex = parseSearchIndex(realSearchIndexRaw);
 
     const chunks = buildChunks(realContent, realSections);
 
-    expect(chunks).toHaveLength(18);
+    expect(chunks).toHaveLength(19);
     expect(chunks).toHaveLength(realIndex.chunks.length);
 
     const actual = chunks.map(({ id, section, title, text, anchor, url }) => ({
