@@ -109,6 +109,12 @@ export interface Project {
   stack: string[];
   repoUrl: string;
   demoUrl: string | null;
+  /**
+   * Card preview image: the committed screenshot (public/previews/, generated
+   * by scripts/capture-previews.ts) for projects with a live demo, GitHub's
+   * generated social image for the rest.
+   */
+  previewUrl: string;
   tier: "featured" | "other";
   order: number;
 }
@@ -156,6 +162,9 @@ function buildProject(
   const stack = entry.stack ?? deriveStack(match);
   const repoUrl = match?.htmlUrl ?? `https://github.com/${snapshotUser}/${entry.repo}`;
   const demoUrl = entry.demoUrl ?? (match?.homepage || null);
+  const previewUrl = demoUrl
+    ? `/previews/${entry.repo}.png`
+    : `https://opengraph.githubassets.com/1/${snapshotUser}/${entry.repo}`;
 
   return {
     repo: entry.repo,
@@ -164,6 +173,7 @@ function buildProject(
     stack,
     repoUrl,
     demoUrl,
+    previewUrl,
     tier: entry.tier,
     order: entry.order,
   };

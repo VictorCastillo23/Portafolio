@@ -325,6 +325,57 @@ describe("mergeProjects", () => {
     expect(result.featured[0].demoUrl).toBe("https://curated-demo.example.com");
   });
 
+  it("points previewUrl at the committed screenshot when the curation has a demoUrl", () => {
+    const curation: ProjectCuration[] = [
+      {
+        repo: "Es_Vitrina",
+        tier: "featured",
+        order: 1,
+        title: "Es Vitrina",
+        demoUrl: "https://esvitrina.com",
+      },
+    ];
+
+    const result = mergeProjects(curation, snapshot([repo({ name: "Es_Vitrina" })]));
+
+    expect(result.featured[0].previewUrl).toBe("/previews/Es_Vitrina.png");
+  });
+
+  it("points previewUrl at the committed screenshot when only the snapshot homepage is a demo", () => {
+    const curation: ProjectCuration[] = [
+      { repo: "Es_Vitrina", tier: "featured", order: 1, title: "Es Vitrina" },
+    ];
+    const snap = snapshot([repo({ name: "Es_Vitrina", homepage: "https://esvitrina.com" })]);
+
+    const result = mergeProjects(curation, snap);
+
+    expect(result.featured[0].previewUrl).toBe("/previews/Es_Vitrina.png");
+  });
+
+  it("falls back to the GitHub social image when there is no demo", () => {
+    const curation: ProjectCuration[] = [
+      { repo: "Keyseer", tier: "other", order: 1, title: "Keyseer" },
+    ];
+
+    const result = mergeProjects(curation, snapshot([repo({ name: "Keyseer", homepage: "" })]));
+
+    expect(result.other[0].previewUrl).toBe(
+      "https://opengraph.githubassets.com/1/VictorCastillo23/Keyseer",
+    );
+  });
+
+  it("builds the GitHub social image from the snapshot user, even without a snapshot match", () => {
+    const curation: ProjectCuration[] = [
+      { repo: "Ghost-Repo", tier: "other", order: 1, title: "Ghost Repo" },
+    ];
+
+    const result = mergeProjects(curation, { ...snapshot([]), user: "someone-else" });
+
+    expect(result.other[0].previewUrl).toBe(
+      "https://opengraph.githubassets.com/1/someone-else/Ghost-Repo",
+    );
+  });
+
   it("sorts each tier by order ascending, breaking ties alphabetically by repo", () => {
     const curation: ProjectCuration[] = [
       { repo: "Zeta-Repo", tier: "other", order: 1, title: "Zeta" },

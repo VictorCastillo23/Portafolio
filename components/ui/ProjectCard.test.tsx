@@ -11,6 +11,7 @@ const baseProject = {
   stack: ["TypeScript", "Next.js"],
   repoUrl: "https://github.com/VictorCastillo23/Es_Vitrina",
   demoUrl: "https://esvitrina.com",
+  previewUrl: "/previews/Es_Vitrina.png",
   tier: "featured" as const,
   order: 1,
 };
