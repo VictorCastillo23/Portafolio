@@ -49,7 +49,7 @@ export function Hero() {
         <a
           href="/victor_cv.pdf"
           download
-          className="animate-rise-in-600 inline-flex w-fit items-center rounded-md border border-accent px-6 py-3 font-mono text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
+          className="animate-rise-in-500 inline-flex w-fit items-center rounded-md border border-accent px-6 py-3 font-mono text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
         >
           Descargar CV
         </a>
