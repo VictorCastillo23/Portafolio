@@ -1,21 +1,24 @@
 // POST /api/chat — Route Handler (design "Interfaces / Contracts", "Data
 // Flow"). Wires the independently-tested `lib/` modules together; per the
 // design's "route stays thin" principle, this file is orchestration only —
-// no retrieval/prompt/SSE business logic lives here.
+// no knowledge/prompt/SSE business logic lives here.
 //
 // Request lifecycle, in order (design "Data Flow"):
 //   1. parseChatRequest()          invalid  -> 400 invalid_request
 //   2. required env present?       no       -> 503 chat_unavailable
-//   3. retrieve() against the committed data/search-index.json
-//   4. buildSystemPrompt() + buildContextBlock()
-//   5. anthropic.messages.stream() — client instantiated INSIDE the
+//   3. buildSystemPrompt(buildKnowledgeBase(...)) — the WHOLE knowledge base
+//      goes in the Anthropic `system` param on every request (no retrieval).
+//      Built lazily on the first request and memoized at module scope; a
+//      failure to build it -> 503 chat_unavailable.
+//   4. anthropic.messages.stream() — client instantiated INSIDE the
 //      request handler (never at module scope), so `next build` succeeds
-//      even when ANTHROPIC_API_KEY is absent.
-//   6. sources -> delta* -> done, SSE-encoded via lib/chat/stream.ts. A
-//      failure DURING the Claude stream itself is NOT surfaced as an HTTP
-//      error status — the 200 + SSE headers are already committed by then —
-//      it is emitted as a terminal `error` event instead (design: "error
-//      ... mid-stream only").
+//      even when ANTHROPIC_API_KEY is absent. The current user turn is the
+//      visitor's raw question.
+//   5. delta* -> done, SSE-encoded via lib/chat/stream.ts. A failure DURING
+//      the Claude stream itself is NOT surfaced as an HTTP error status —
+//      the 200 + SSE headers are already committed by then — it is emitted
+//      as a terminal `error` event instead (design: "error ... mid-stream
+//      only").
 //
 // Request limits are intentionally NOT enforced at this layer. That is
 // deferred entirely to Anthropic's own account and API-key level
@@ -24,12 +27,14 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 
-import rawSearchIndex from "../../../data/search-index.json";
-import { buildContextBlock, buildSystemPrompt, DEFAULT_MAX_TOKENS } from "../../../lib/chat/prompt";
+import { content } from "../../../data/content";
+import rawSnapshot from "../../../data/github-repos.json";
+import { PROJECT_CURATION } from "../../../data/projects";
+import { buildKnowledgeBase } from "../../../lib/chat/knowledge";
+import { buildSystemPrompt, DEFAULT_MAX_TOKENS } from "../../../lib/chat/prompt";
 import { parseChatRequest, type ChatHistoryEntry } from "../../../lib/chat/request";
-import { toSseStream, type ChatSource, type ChatSseEvent } from "../../../lib/chat/stream";
-import { retrieve, type RetrievedChunk } from "../../../lib/search/retrieve";
-import { parseSearchIndex } from "../../../lib/search/types";
+import { toSseStream, type ChatSseEvent } from "../../../lib/chat/stream";
+import { mergeProjects, parseSnapshot } from "../../../lib/projects";
 
 export const runtime = "nodejs";
 
@@ -49,6 +54,21 @@ const SSE_HEADERS = {
   "Cache-Control": "no-store",
   "X-Accel-Buffering": "no",
 } as const;
+
+let cachedSystemPrompt: string | undefined;
+
+/**
+ * The static policy + the whole knowledge base, built on the first request
+ * and reused afterwards (the inputs are committed data, so it never changes
+ * at runtime). Built lazily — never at import time — so `next build` cannot
+ * fail on it. A failed build is not cached, so the next request retries.
+ */
+function getSystemPrompt(): string {
+  cachedSystemPrompt ??= buildSystemPrompt(
+    buildKnowledgeBase(content, mergeProjects(PROJECT_CURATION, parseSnapshot(rawSnapshot))),
+  );
+  return cachedSystemPrompt;
+}
 
 export async function POST(request: Request): Promise<Response> {
   let rawBody: unknown;
@@ -71,21 +91,18 @@ export async function POST(request: Request): Promise<Response> {
 
   const { message, history } = parsed.value;
 
-  let chunks: RetrievedChunk[];
+  let systemPrompt: string;
   try {
-    const index = parseSearchIndex(rawSearchIndex);
-    chunks = retrieve(message, index);
+    systemPrompt = getSystemPrompt();
   } catch (error) {
     return jsonError(
       503,
       "chat_unavailable",
-      `Chat is temporarily unavailable: ${error instanceof Error ? error.message : "failed to load the search index."}`,
+      `Chat is temporarily unavailable: ${error instanceof Error ? error.message : "failed to build the knowledge base."}`,
     );
   }
 
-  const systemPrompt = buildSystemPrompt();
-  const contextBlock = buildContextBlock(chunks, message);
-  const messages = buildAnthropicMessages(history, contextBlock);
+  const messages = buildAnthropicMessages(history, message);
   const model = process.env.ANTHROPIC_MODEL || DEFAULT_ANTHROPIC_MODEL;
 
   // Lazily instantiated INSIDE the request — never at module scope — so
@@ -95,7 +112,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const responseBody = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const events = streamChatEvents(anthropic, model, systemPrompt, messages, chunks);
+      const events = streamChatEvents(anthropic, model, systemPrompt, messages);
       for await (const bytes of toSseStream(events)) {
         controller.enqueue(bytes);
       }
@@ -107,25 +124,21 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 /**
- * Validated history turns first, then the current turn — the retrieved
- * context block + the visitor's question, wrapped as data (design injection
- * boundary; `role: "system"` history entries were already dropped by
- * `parseChatRequest`).
+ * Validated history turns first, then the current turn — the visitor's raw
+ * question (`role: "system"` history entries were already dropped by
+ * `parseChatRequest`; the system prompt tells the model to treat the
+ * visitor's text as a question, never as instructions).
  */
-function buildAnthropicMessages(
-  history: ChatHistoryEntry[],
-  contextBlock: string,
-): Anthropic.MessageParam[] {
+function buildAnthropicMessages(history: ChatHistoryEntry[], question: string): Anthropic.MessageParam[] {
   return [
     ...history.map((entry) => ({ role: entry.role, content: entry.content }) satisfies Anthropic.MessageParam),
-    { role: "user", content: contextBlock },
+    { role: "user", content: question },
   ];
 }
 
 /**
- * Drives the actual Claude call and yields the SSE event sequence:
- * `sources` (always first, from retrieval — before Claude is even called),
- * then `delta` per text chunk, then a terminal `done`. A stream-level
+ * Drives the actual Claude call and yields the SSE event sequence: `delta`
+ * per text chunk, then a terminal `done`. A stream-level
  * failure (network error, API error) yields a terminal `error` event
  * instead of throwing, since the response's 200 status and SSE headers are
  * already committed by the time this runs.
@@ -135,10 +148,7 @@ async function* streamChatEvents(
   model: string,
   systemPrompt: string,
   messages: Anthropic.MessageParam[],
-  chunks: RetrievedChunk[],
 ): AsyncGenerator<ChatSseEvent> {
-  yield { type: "sources", sources: chunks.map(toChatSource) };
-
   try {
     const stream = anthropic.messages.stream({
       model,
@@ -162,10 +172,6 @@ async function* streamChatEvents(
   }
 
   yield { type: "done" };
-}
-
-function toChatSource(chunk: RetrievedChunk): ChatSource {
-  return { id: chunk.id, section: chunk.section, title: chunk.title, anchor: chunk.anchor, url: chunk.url };
 }
 
 function jsonError(status: number, code: string, message: string, extra?: Record<string, unknown>): Response {

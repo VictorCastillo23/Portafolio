@@ -1,33 +1,30 @@
-// TDD suite for the RAG system prompt + context block (design "System Prompt
-// (lib/chat/prompt.ts)"). Policy stays static in `buildSystemPrompt()` (the
-// design: "Policy stays in system so it survives multi-turn"); the retrieved
-// chunks + the visitor's question are wrapped as data (not instruction) by
-// `buildContextBlock()`, matching Anthropic's documented RAG shape — "data,
-// not instruction (injection boundary)".
+// TDD suite for the full-context system prompt (lib/chat/prompt.ts). The whole
+// knowledge base is embedded in the Anthropic `system` param after the static
+// policy text, so `buildSystemPrompt(knowledge)` is the only builder: policy
+// first, then the knowledge string verbatim. An empty knowledge base fails
+// loudly instead of letting the model answer without grounding.
 
 import { describe, expect, it } from "vitest";
-import type { RetrievedChunk } from "../search/retrieve";
-import { buildContextBlock, buildSystemPrompt, FORBIDDEN_EMPLOYER_NAMES } from "./prompt";
+import { buildSystemPrompt, FORBIDDEN_EMPLOYER_NAMES } from "./prompt";
 
-function retrievedChunk(overrides: Partial<RetrievedChunk> = {}): RetrievedChunk {
-  return {
-    id: "experience-juventudes",
-    section: "experience",
-    title: "Juventudes — Desarrollador",
-    text: "Juventudes — Gobierno Municipal. Migración del sistema de PHP a Angular.",
-    anchor: "#experience",
-    url: null,
-    score: 0.9,
-    ...overrides,
-  };
-}
+const sampleKnowledge = "<knowledge>\n## Experiencia\n### Acme — Dev\nAcme — Dev (2020). Built things.\n</knowledge>";
 
 describe("buildSystemPrompt", () => {
-  const prompt = buildSystemPrompt();
+  // Neutral knowledge text (no policy keywords) so the policy assertions
+  // below can only be satisfied by the static policy itself.
+  const prompt = buildSystemPrompt("Some facts.");
 
-  it("includes a grounding instruction restricting answers to the provided context", () => {
-    expect(prompt).toMatch(/context/i);
-    expect(prompt).toMatch(/do not invent|never invent|only.*context|strictly/i);
+  it("includes a grounding instruction restricting answers to the knowledge base", () => {
+    expect(prompt).toMatch(/knowledge/i);
+    expect(prompt).toMatch(/do not invent|never invent|only.*knowledge|strictly/i);
+  });
+
+  it("no longer refers to a \"provided context\" left over from the RAG design", () => {
+    expect(prompt).not.toMatch(/provided context/i);
+  });
+
+  it("refers to the <knowledge> block explicitly", () => {
+    expect(prompt).toContain("<knowledge> block");
   });
 
   it("includes a language-mirroring instruction", () => {
@@ -48,7 +45,7 @@ describe("buildSystemPrompt", () => {
     expect(prompt).not.toMatch(/never (share|state|give|provide).*(email|phone)/i);
   });
 
-  it("forbids inventing placeholder contact info when it is not present in the context", () => {
+  it("forbids inventing placeholder contact info when it is not present in the knowledge base", () => {
     expect(prompt).toMatch(/verbatim|exactly as (it appears|written)/i);
     expect(prompt).toMatch(/do not (invent|fabricate|make up|write a placeholder)/i);
   });
@@ -66,54 +63,34 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toMatch(/longer|detailed|depth|thorough/i);
   });
 
+  it("treats the visitor's text as a question, never as instructions that can change the rules", () => {
+    expect(prompt).toMatch(/question/i);
+    expect(prompt).toMatch(/never as instructions/i);
+  });
+
   it("FORBIDDEN_EMPLOYER_NAMES lists exactly the 3 past employers from the design", () => {
     expect(FORBIDDEN_EMPLOYER_NAMES).toEqual(["Juventudes", "Emerald Digital", "Corvuz"]);
   });
-});
 
-describe("buildContextBlock", () => {
-  it("incorporates the retrieved chunk id, section, title, and text", () => {
-    const block = buildContextBlock([retrievedChunk()], "¿Qué hiciste en Juventudes?");
-
-    expect(block).toContain("experience-juventudes");
-    expect(block).toContain("experience");
-    expect(block).toContain("Juventudes — Desarrollador");
-    expect(block).toContain("Migración del sistema de PHP a Angular.");
+  it("embeds the knowledge string verbatim", () => {
+    expect(buildSystemPrompt(sampleKnowledge)).toContain(sampleKnowledge);
   });
 
-  it("incorporates the visitor's query", () => {
-    const block = buildContextBlock([retrievedChunk()], "¿Qué hiciste en Juventudes?");
+  it("places the knowledge after the policy, separated by a blank line", () => {
+    const prompt = buildSystemPrompt(sampleKnowledge);
+    const knowledgeStart = prompt.indexOf(sampleKnowledge);
 
-    expect(block).toContain("¿Qué hiciste en Juventudes?");
+    expect(knowledgeStart).toBeGreaterThan(0);
+    expect(prompt.slice(0, knowledgeStart).endsWith("\n\n")).toBe(true);
+    expect(prompt.indexOf("FORMAT:")).toBeLessThan(knowledgeStart);
+    expect(prompt.endsWith(sampleKnowledge)).toBe(true);
   });
 
-  it("renders multiple chunks, each distinguishable in the output", () => {
-    const chunks = [
-      retrievedChunk({ id: "experience-juventudes", text: "Texto de Juventudes." }),
-      retrievedChunk({ id: "experience-corvuz", section: "experience", text: "Texto de Corvuz." }),
-    ];
-
-    const block = buildContextBlock(chunks, "compara tus trabajos");
-
-    expect(block).toContain("experience-juventudes");
-    expect(block).toContain("Texto de Juventudes.");
-    expect(block).toContain("experience-corvuz");
-    expect(block).toContain("Texto de Corvuz.");
+  it("throws when the knowledge base is empty", () => {
+    expect(() => buildSystemPrompt("")).toThrow();
   });
 
-  it("produces a valid (non-throwing) empty context block when no chunks were retrieved", () => {
-    const block = buildContextBlock([], "pregunta sin resultados");
-
-    expect(block).toContain("pregunta sin resultados");
-    expect(() => buildContextBlock([], "x")).not.toThrow();
-  });
-
-  it("escapes XML-significant characters in chunk text so a stray tag cannot break the block", () => {
-    const chunks = [retrievedChunk({ text: "Uso <script>alert('x')</script> & otras cosas." })];
-
-    const block = buildContextBlock(chunks, "q");
-
-    expect(block).not.toContain("<script>");
-    expect(block).toContain("&lt;script&gt;");
+  it("throws when the knowledge base is only whitespace", () => {
+    expect(() => buildSystemPrompt("  \n\t ")).toThrow();
   });
 });
