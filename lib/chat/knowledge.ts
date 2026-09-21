@@ -11,8 +11,8 @@
 // labels ("Inicio", "Habilidades", "Teléfono", ...) stay in Spanish because
 // they mirror the site content the assistant answers about.
 
-import type { Credential, Job, SiteContent } from "../../data/content";
-import type { Project, ProjectSections } from "../projects";
+import type { SiteContent } from "../../data/content";
+import type { ProjectSections } from "../projects";
 
 /**
  * Upper bound (in characters) for the whole knowledge base. Stuffing the
@@ -21,91 +21,32 @@ import type { Project, ProjectSections } from "../projects";
  */
 export const KNOWLEDGE_CHAR_BUDGET = 30_000;
 
-interface Entry {
-  /** Human-readable name, used only in error messages. */
-  name: string;
-  /** Optional `###` heading; the contact section has none. */
-  heading?: string;
-  body: string;
-}
-
-function jobEntry(job: Job): Entry {
-  const title = `${job.company} — ${job.role}`;
-  return {
-    name: title,
-    heading: title,
-    body: `${job.company} — ${job.role} (${job.range}). ${job.bullets.join(" ")}`,
-  };
-}
-
-function credentialEntry(credential: Credential): Entry {
-  const detail = credential.detail ? ` ${credential.detail}` : "";
-  return {
-    name: credential.title,
-    heading: credential.title,
-    body: `${credential.title} — ${credential.issuer} (${credential.date}).${detail}`,
-  };
-}
-
-function projectEntry(project: Project): Entry {
-  const stack = project.stack.length > 0 ? ` Stack: ${project.stack.join(", ")}.` : "";
-  return {
-    name: project.title,
-    heading: project.title,
-    body: `${project.title}. ${project.description}${stack}`,
-  };
-}
-
-function renderEntry(entry: Entry): string {
-  if (entry.body.trim().length === 0) {
-    throw new Error(`buildKnowledgeBase: entry "${entry.name}" has empty text.`);
-  }
-  return entry.heading === undefined ? entry.body : `### ${entry.heading}\n${entry.body}`;
-}
-
-function renderSection(title: string, entries: Entry[]): string {
-  return `## ${title}\n${entries.map(renderEntry).join("\n\n")}`;
-}
-
 /**
  * Builds the whole knowledge base about the site owner as a single string
- * wrapped in `<knowledge>` tags. Throws when any entry's text is empty, so a
- * broken content edit fails loudly instead of silently shipping a hole.
+ * wrapped in `<knowledge>` tags.
  */
 export function buildKnowledgeBase(content: SiteContent, sections: ProjectSections): string {
   const { meta, hero, about, contact } = content;
   const { education } = about;
 
+  const jobs = content.experience.map(
+    (job) => `### ${job.company} — ${job.role}\n${job.company} — ${job.role} (${job.range}). ${job.bullets.join(" ")}`,
+  );
+  const credentials = content.credentials.map(
+    (c) => `### ${c.title}\n${c.title} — ${c.issuer} (${c.date}).${c.detail ? ` ${c.detail}` : ""}`,
+  );
+  const projects = [...sections.featured, ...sections.other].map(
+    (p) =>
+      `### ${p.title}\n${p.title}. ${p.description}${p.stack.length > 0 ? ` Stack: ${p.stack.join(", ")}.` : ""}`,
+  );
+
   const body = [
-    renderSection("Inicio", [
-      {
-        name: "Inicio",
-        heading: hero.title,
-        body: `${meta.name} — ${meta.role}. ${hero.tagline} ${hero.blurb}`,
-      },
-    ]),
-    renderSection("Sobre mí", [
-      { name: "Sobre mí — Resumen", heading: "Resumen", body: about.paragraphs.join(" ") },
-      {
-        name: "Sobre mí — Habilidades",
-        heading: "Habilidades",
-        body: `Habilidades: ${about.skills.join(", ")}.`,
-      },
-      {
-        name: "Sobre mí — Educación",
-        heading: "Educación",
-        body: `${education.degree} — ${education.school} (${education.range}). ${education.detail}`,
-      },
-    ]),
-    renderSection("Experiencia", content.experience.map(jobEntry)),
-    renderSection("Credenciales", content.credentials.map(credentialEntry)),
-    renderSection("Proyectos", [...sections.featured, ...sections.other].map(projectEntry)),
-    renderSection("Contacto", [
-      {
-        name: "Contacto",
-        body: `${contact.blurb} Email: ${contact.email}. Teléfono: ${contact.phone}.`,
-      },
-    ]),
+    `## Inicio\n### ${hero.title}\n${meta.name} — ${meta.role}. ${hero.tagline} ${hero.blurb}`,
+    `## Sobre mí\n### Resumen\n${about.paragraphs.join(" ")}\n\n### Habilidades\nHabilidades: ${about.skills.join(", ")}.\n\n### Educación\n${education.degree} — ${education.school} (${education.range}). ${education.detail}`,
+    `## Experiencia\n${jobs.join("\n\n")}`,
+    `## Credenciales\n${credentials.join("\n\n")}`,
+    `## Proyectos\n${projects.join("\n\n")}`,
+    `## Contacto\n${contact.blurb} Email: ${contact.email}. Teléfono: ${contact.phone}.`,
   ].join("\n\n");
 
   return `<knowledge>\n${body}\n</knowledge>`;

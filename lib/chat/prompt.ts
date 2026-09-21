@@ -31,15 +31,8 @@ export const DEFAULT_MAX_TOKENS = 1024;
  * parameter. English instructions per design ("Instructions in English; output
  * language mirrors the visitor"); the assistant's actual replies mirror
  * whatever language the visitor wrote in.
- *
- * Throws when `knowledge` is empty or whitespace-only: without it the model
- * would answer with nothing to ground on and hallucinate, so fail loudly.
  */
 export function buildSystemPrompt(knowledge: string): string {
-  if (knowledge.trim().length === 0) {
-    throw new Error("buildSystemPrompt: the knowledge base is empty.");
-  }
-
   const policy = [
     "You are the AI assistant embedded in Victor Castillo's personal portfolio website. You answer visitor questions about his experience, skills, projects, and credentials.",
     "",

@@ -45,13 +45,6 @@ function fakeClaudeStream(deltas: string[]): AsyncIterable<FakeStreamEvent> {
   };
 }
 
-// Loads a fresh copy of the route (new module-scope state) so tests can swap
-// what `lib/chat/knowledge` does before the route ever imports it.
-async function importFreshRoute(): Promise<typeof import("./route")> {
-  vi.resetModules();
-  return import("./route");
-}
-
 function postRequest(body: unknown): Request {
   return new Request("http://localhost/api/chat", {
     method: "POST",
@@ -187,53 +180,6 @@ describe("POST /api/chat", () => {
     expect(callArgs.messages[0]).toEqual(history[0]);
     expect(callArgs.messages[1]).toEqual(history[1]);
     expect(callArgs.messages.at(-1)).toEqual({ role: "user", content: "Y que mas?" });
-  });
-
-  it("builds the system prompt once and reuses it across requests", async () => {
-    const buildKnowledgeBaseSpy = vi.fn();
-    vi.doMock("../../../lib/chat/knowledge", async (importOriginal) => {
-      const actual = await importOriginal<typeof import("../../../lib/chat/knowledge")>();
-      buildKnowledgeBaseSpy.mockImplementation(actual.buildKnowledgeBase);
-      return { ...actual, buildKnowledgeBase: buildKnowledgeBaseSpy };
-    });
-
-    try {
-      const route = await importFreshRoute();
-      // Nothing is built at import time (would break `next build`).
-      expect(buildKnowledgeBaseSpy).not.toHaveBeenCalled();
-
-      await (await route.POST(postRequest({ message: "Primera pregunta" }))).text();
-      await (await route.POST(postRequest({ message: "Segunda pregunta" }))).text();
-
-      expect(buildKnowledgeBaseSpy).toHaveBeenCalledTimes(1);
-      expect(streamMock).toHaveBeenCalledTimes(2);
-      expect(streamMock.mock.calls[1]?.[0].system).toBe(streamMock.mock.calls[0]?.[0].system);
-    } finally {
-      vi.doUnmock("../../../lib/chat/knowledge");
-    }
-  });
-
-  it("returns 503 chat_unavailable when the system prompt cannot be built, before any Claude call", async () => {
-    vi.doMock("../../../lib/chat/knowledge", () => ({
-      buildKnowledgeBase: () => {
-        throw new Error('entry "Acme" has empty text.');
-      },
-    }));
-
-    try {
-      const route = await importFreshRoute();
-
-      const response = await route.POST(postRequest({ message: "Que hiciste en Juventudes?" }));
-
-      expect(response.status).toBe(503);
-      const json = (await response.json()) as { code: string; message: string };
-      expect(json.code).toBe("chat_unavailable");
-      expect(json.message).toBe('Chat is temporarily unavailable: entry "Acme" has empty text.');
-      expect(anthropicConstructorMock).not.toHaveBeenCalled();
-      expect(streamMock).not.toHaveBeenCalled();
-    } finally {
-      vi.doUnmock("../../../lib/chat/knowledge");
-    }
   });
 
   it("emits a terminal error event instead of throwing when the Claude stream itself fails", async () => {

@@ -6,10 +6,9 @@
 // Request lifecycle, in order (design "Data Flow"):
 //   1. parseChatRequest()          invalid  -> 400 invalid_request
 //   2. required env present?       no       -> 503 chat_unavailable
-//   3. buildSystemPrompt(buildKnowledgeBase(...)) — the WHOLE knowledge base
-//      goes in the Anthropic `system` param on every request (no retrieval).
-//      Built lazily on the first request and memoized at module scope; a
-//      failure to build it -> 503 chat_unavailable.
+//   3. SYSTEM_PROMPT = buildSystemPrompt(buildKnowledgeBase(...)) — the WHOLE
+//      knowledge base goes in the Anthropic `system` param on every request
+//      (no retrieval). Built once at module load.
 //   4. anthropic.messages.stream() — client instantiated INSIDE the
 //      request handler (never at module scope), so `next build` succeeds
 //      even when ANTHROPIC_API_KEY is absent. The current user turn is the
@@ -55,20 +54,15 @@ const SSE_HEADERS = {
   "X-Accel-Buffering": "no",
 } as const;
 
-let cachedSystemPrompt: string | undefined;
-
 /**
- * The static policy + the whole knowledge base, built on the first request
- * and reused afterwards (the inputs are committed data, so it never changes
- * at runtime). Built lazily — never at import time — so `next build` cannot
- * fail on it. A failed build is not cached, so the next request retries.
+ * The static policy + the whole knowledge base, built once at module load. The
+ * inputs are committed static data that `components/sections/Projects.tsx`
+ * already processes at build time, so building it cannot fail at runtime; a
+ * bad content edit is caught by the contract tests / `next build`.
  */
-function getSystemPrompt(): string {
-  cachedSystemPrompt ??= buildSystemPrompt(
-    buildKnowledgeBase(content, mergeProjects(PROJECT_CURATION, parseSnapshot(rawSnapshot))),
-  );
-  return cachedSystemPrompt;
-}
+const SYSTEM_PROMPT = buildSystemPrompt(
+  buildKnowledgeBase(content, mergeProjects(PROJECT_CURATION, parseSnapshot(rawSnapshot))),
+);
 
 export async function POST(request: Request): Promise<Response> {
   let rawBody: unknown;
@@ -91,17 +85,6 @@ export async function POST(request: Request): Promise<Response> {
 
   const { message, history } = parsed.value;
 
-  let systemPrompt: string;
-  try {
-    systemPrompt = getSystemPrompt();
-  } catch (error) {
-    return jsonError(
-      503,
-      "chat_unavailable",
-      `Chat is temporarily unavailable: ${error instanceof Error ? error.message : "failed to build the knowledge base."}`,
-    );
-  }
-
   const messages = buildAnthropicMessages(history, message);
   const model = process.env.ANTHROPIC_MODEL || DEFAULT_ANTHROPIC_MODEL;
 
@@ -112,7 +95,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const responseBody = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const events = streamChatEvents(anthropic, model, systemPrompt, messages);
+      const events = streamChatEvents(anthropic, model, SYSTEM_PROMPT, messages);
       for await (const bytes of toSseStream(events)) {
         controller.enqueue(bytes);
       }

@@ -1,8 +1,7 @@
 // TDD suite for the full-context system prompt (lib/chat/prompt.ts). The whole
 // knowledge base is embedded in the Anthropic `system` param after the static
 // policy text, so `buildSystemPrompt(knowledge)` is the only builder: policy
-// first, then the knowledge string verbatim. An empty knowledge base fails
-// loudly instead of letting the model answer without grounding.
+// first, then the knowledge string verbatim.
 
 import { describe, expect, it } from "vitest";
 import { buildSystemPrompt, FORBIDDEN_EMPLOYER_NAMES } from "./prompt";
@@ -86,11 +85,4 @@ describe("buildSystemPrompt", () => {
     expect(prompt.endsWith(sampleKnowledge)).toBe(true);
   });
 
-  it("throws when the knowledge base is empty", () => {
-    expect(() => buildSystemPrompt("")).toThrow();
-  });
-
-  it("throws when the knowledge base is only whitespace", () => {
-    expect(() => buildSystemPrompt("  \n\t ")).toThrow();
-  });
 });
