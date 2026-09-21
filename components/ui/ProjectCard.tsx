@@ -12,11 +12,18 @@ interface ProjectCardProps {
   variant: "featured" | "other";
 }
 
+const ICON_LINK = "relative z-10 text-muted motion-safe:transition-colors hover:text-accent";
+// Lit while the stretched card link (not one of the icon buttons, which sit
+// above it) is hovered, so the button that a card click would open is the
+// one that lights up.
+const CARD_TARGET = "group-has-[[data-card-link]:hover]/card:text-accent";
+
 export function ProjectCard({ project, variant }: ProjectCardProps) {
   const isFeatured = variant === "featured";
+  const hasDemo = Boolean(project.demoUrl);
 
   return (
-    <article className="rounded-lg border border-line bg-surface p-6 transition-[border-color,transform] duration-200 ease-out hover:border-accent motion-safe:hover:-translate-y-1">
+    <article className="group/card relative rounded-lg border border-line bg-surface p-6 transition-[border-color,transform] duration-200 ease-out hover:border-accent motion-safe:hover:-translate-y-1">
       <div className="flex items-center justify-between">
         <span aria-hidden="true" className="text-accent">
           <Icon name="folder" />
@@ -27,9 +34,9 @@ export function ProjectCard({ project, variant }: ProjectCardProps) {
             target="_blank"
             rel="noreferrer"
             aria-label={`Código de ${project.title} en GitHub`}
-            className="text-muted motion-safe:transition-colors hover:text-accent"
+            className={hasDemo ? ICON_LINK : `${ICON_LINK} ${CARD_TARGET}`}
           >
-            <Icon name="code" />
+            <Icon name="github" />
           </a>
           {project.demoUrl ? (
             <a
@@ -37,7 +44,7 @@ export function ProjectCard({ project, variant }: ProjectCardProps) {
               target="_blank"
               rel="noreferrer"
               aria-label={`Demo de ${project.title}`}
-              className="text-muted motion-safe:transition-colors hover:text-accent"
+              className={`${ICON_LINK} ${CARD_TARGET}`}
             >
               <Icon name="external" />
             </a>
@@ -51,7 +58,20 @@ export function ProjectCard({ project, variant }: ProjectCardProps) {
         </p>
       ) : null}
 
-      <h3 className="mt-2 font-sans text-lg font-bold text-text">{project.title}</h3>
+      <h3 className="mt-2 font-sans text-lg font-bold text-text">
+        {/* Stretched link: ::after covers the whole card, so a click anywhere
+            opens the demo (or the repo when there is none). The icon buttons
+            above sit on z-10 so they keep their own targets. */}
+        <a
+          href={project.demoUrl || project.repoUrl}
+          target="_blank"
+          rel="noreferrer"
+          data-card-link
+          className="after:absolute after:inset-0 after:content-['']"
+        >
+          {project.title}
+        </a>
+      </h3>
       <p className="mt-3 text-sm text-muted">{project.description}</p>
 
       {project.stack.length > 0 ? (
