@@ -24,9 +24,9 @@ export function Section({ id, index, title, children, className }: SectionProps)
     <section id={id} aria-labelledby={headingId} className={className}>
       <h2
         id={headingId}
-        className="flex items-center gap-4 font-sans text-2xl font-bold text-text sm:text-3xl"
+        className="flex items-center gap-4 font-heading text-2xl font-bold text-primary sm:text-3xl"
       >
-        <span aria-hidden="true" className="font-mono text-lg text-accent sm:text-xl">
+        <span aria-hidden="true" className="text-lg text-accent sm:text-xl">
           {index}
         </span>
         {title}

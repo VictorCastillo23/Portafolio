@@ -27,10 +27,10 @@ export function Credentials() {
                 : ""
             }`}
           >
-            <span className="font-mono text-xs uppercase tracking-wide text-accent">
+            <span className="text-xs uppercase tracking-wide text-accent">
               {KIND_LABEL[credential.kind]}
             </span>
-            <h3 className="mt-2 font-sans text-lg font-bold text-text">
+            <h3 className="mt-2 font-heading text-lg font-bold text-primary">
               {credential.url ? (
                 // Stretched link: ::after covers the whole card, so a click
                 // anywhere on it opens the url without nesting interactive
@@ -48,7 +48,7 @@ export function Credentials() {
               )}
             </h3>
             <p className="mt-1 text-sm text-muted">{credential.issuer}</p>
-            <p className="mt-1 font-mono text-xs text-muted">{credential.date}</p>
+            <p className="mt-1 text-xs text-muted">{credential.date}</p>
             {credential.detail ? (
               <p className="mt-3 text-sm text-muted">{credential.detail}</p>
             ) : null}

@@ -53,12 +53,12 @@ export function ProjectCard({ project, variant }: ProjectCardProps) {
       </div>
 
       {isFeatured ? (
-        <p className="mt-4 font-mono text-xs uppercase tracking-wide text-accent">
+        <p className="mt-4 text-xs uppercase tracking-wide text-accent">
           Proyecto destacado
         </p>
       ) : null}
 
-      <h3 className="mt-2 font-sans text-lg font-bold text-text">
+      <h3 className="mt-2 font-heading text-lg font-bold text-primary">
         {/* Stretched link: ::after covers the whole card, so a click anywhere
             opens the demo (or the repo when there is none). The icon buttons
             above sit on z-10 so they keep their own targets. */}
@@ -75,7 +75,7 @@ export function ProjectCard({ project, variant }: ProjectCardProps) {
       <p className="mt-3 text-sm text-muted">{project.description}</p>
 
       {project.stack.length > 0 ? (
-        <ul className="mt-4 flex flex-wrap gap-2 font-mono text-xs text-muted">
+        <ul className="mt-4 flex flex-wrap gap-2 text-xs text-muted">
           {project.stack.map((tech) => (
             <li key={tech}>{tech}</li>
           ))}

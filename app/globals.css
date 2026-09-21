@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #14101b;
-  --color-surface: #1e1828;
-  --color-line: #3a3350;
-  --color-text: #ede7f2;
-  --color-muted: #a79fb4;
-  --color-accent: #ffb35c;
+  --color-ink: #f1f5ff;
+  --color-surface: #ffffff;
+  --color-line: #c6d4f3;
+  --color-text: #0e1527;
+  --color-primary: #0f172a;
+  --color-accent: #343f58;
+  /* Not in the design spec: 70% Text over Background (~6.5:1 on the page bg). */
+  --color-muted: #525868;
 
-  --font-sans: var(--font-manrope);
-  --font-mono: var(--font-jetbrains-mono);
+  --font-sans: var(--font-google-sans);
+  --font-heading: var(--font-epilogue);
 }
 
 body {

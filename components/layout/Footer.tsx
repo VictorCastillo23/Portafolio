@@ -24,7 +24,7 @@ export function Footer() {
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-center font-mono text-xs text-muted">{content.footer.text}</p>
+      <p className="mt-4 text-center text-xs text-muted">{content.footer.text}</p>
     </footer>
   );
 }

@@ -31,25 +31,25 @@ export function Hero() {
         priority
         className="animate-rise-in-100 mb-8 h-28 w-28 rounded-full object-cover sm:h-32 sm:w-32"
       />
-      <p className="animate-rise-in-100 font-mono text-sm text-accent sm:text-base">{eyebrow}</p>
-      <h1 className="animate-rise-in-200 mt-4 font-sans text-4xl font-extrabold text-text sm:text-6xl">
+      <p className="animate-rise-in-100 text-sm text-accent sm:text-base">{eyebrow}</p>
+      <h1 className="animate-rise-in-200 mt-4 font-heading text-4xl font-extrabold text-primary sm:text-6xl">
         {title}
       </h1>
-      <h2 className="animate-rise-in-300 mt-2 max-w-2xl font-sans text-2xl font-bold text-muted sm:text-4xl">
+      <h2 className="animate-rise-in-300 mt-2 max-w-2xl font-heading text-2xl font-bold text-muted sm:text-4xl">
         {tagline}
       </h2>
       <p className="animate-rise-in-400 mt-6 max-w-xl text-base text-muted sm:text-lg">{blurb}</p>
       <div className="mt-10 flex flex-wrap gap-4">
         <a
           href={cta.href}
-          className="animate-rise-in-500 inline-flex w-fit items-center rounded-md border border-accent px-6 py-3 font-mono text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
+          className="animate-rise-in-500 inline-flex w-fit items-center rounded-md border border-accent px-6 py-3 text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
         >
           {cta.label}
         </a>
         <a
           href="/victor_cv.pdf"
           download
-          className="animate-rise-in-500 inline-flex w-fit items-center rounded-md border border-accent px-6 py-3 font-mono text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
+          className="animate-rise-in-500 inline-flex w-fit items-center rounded-md border border-accent px-6 py-3 text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
         >
           Descargar CV
         </a>

@@ -19,7 +19,7 @@ export function Projects() {
   return (
     <Section id="projects" index={navItem.index} title={navItem.label}>
       <div>
-        <h3 className="font-mono text-sm uppercase tracking-wide text-muted">Destacados</h3>
+        <h3 className="text-sm uppercase tracking-wide text-muted">Destacados</h3>
         <div className="mt-4 grid gap-6">
           {featured.map((project) => (
             <ProjectCard key={project.repo} project={project} variant="featured" />
@@ -28,7 +28,7 @@ export function Projects() {
       </div>
 
       <div className="mt-12">
-        <h3 className="font-mono text-sm uppercase tracking-wide text-muted">Otros proyectos</h3>
+        <h3 className="text-sm uppercase tracking-wide text-muted">Otros proyectos</h3>
         <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {other.map((project) => (
             <ProjectCard key={project.repo} project={project} variant="other" />

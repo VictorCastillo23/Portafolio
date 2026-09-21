@@ -1,20 +1,22 @@
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
-import { Manrope, JetBrains_Mono } from "next/font/google";
+import { Epilogue, Google_Sans } from "next/font/google";
 import { content } from "../data/content";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const epilogue = Epilogue({
+  variable: "--font-epilogue",
   subsets: ["latin"],
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
+const googleSans = Google_Sans({
+  variable: "--font-google-sans",
   subsets: ["latin"],
   display: "swap",
+  // next/font has no metric-adjusted fallback for Google Sans, so declare a generic one.
+  fallback: ["system-ui", "sans-serif"],
 });
 
 // SEO/OpenGraph metadata, sourced from data/content.ts so it can never drift
@@ -45,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${manrope.variable} ${jetbrainsMono.variable}`}
+      className={`${epilogue.variable} ${googleSans.variable}`}
     >
       <body className="bg-ink text-text font-sans antialiased">
         {children}

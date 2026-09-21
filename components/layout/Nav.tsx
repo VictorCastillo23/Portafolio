@@ -73,7 +73,7 @@ export function Nav() {
         aria-label="Navegación principal"
         className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 md:h-20"
       >
-        <a href="#hero" onClick={closeMenu} className="font-mono text-lg font-bold text-accent">
+        <a href="#hero" onClick={closeMenu} className="text-lg font-bold text-accent">
           {getInitials(content.meta.name)}
         </a>
 
@@ -85,7 +85,7 @@ export function Nav() {
                 <a
                   href={`#${item.id}`}
                   aria-current={isActive ? "page" : undefined}
-                  className={`font-mono text-sm motion-safe:transition-colors ${
+                  className={`text-sm motion-safe:transition-colors ${
                     isActive ? "text-accent" : "text-muted hover:text-text"
                   }`}
                 >
@@ -138,7 +138,7 @@ export function Nav() {
                 href={`#${item.id}`}
                 aria-current={isActive ? "page" : undefined}
                 onClick={closeMenu}
-                className={`block py-2 font-mono text-sm ${isActive ? "text-accent" : "text-muted"}`}
+                className={`block py-2 text-sm ${isActive ? "text-accent" : "text-muted"}`}
               >
                 <span aria-hidden="true">{item.index} </span>
                 {item.label}

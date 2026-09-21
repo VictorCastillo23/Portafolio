@@ -9,8 +9,8 @@ const { Analytics, SpeedInsights } = vi.hoisted(() => ({
 vi.mock("@vercel/analytics/next", () => ({ Analytics }));
 vi.mock("@vercel/speed-insights/next", () => ({ SpeedInsights }));
 vi.mock("next/font/google", () => ({
-  Manrope: () => ({ variable: "font-manrope" }),
-  JetBrains_Mono: () => ({ variable: "font-jetbrains-mono" }),
+  Epilogue: () => ({ variable: "font-epilogue" }),
+  Google_Sans: () => ({ variable: "font-google-sans" }),
 }));
 
 import RootLayout from "./layout";
@@ -37,5 +37,16 @@ describe("RootLayout", () => {
     );
 
     expect(SpeedInsights).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies the headline and body font variables to <html>", () => {
+    const html = renderToStaticMarkup(
+      <RootLayout>
+        <main>contenido</main>
+      </RootLayout>,
+    );
+
+    expect(html).toContain("font-epilogue");
+    expect(html).toContain("font-google-sans");
   });
 });
