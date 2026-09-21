@@ -12,9 +12,17 @@ const ALL_ICON_NAMES: readonly IconName[] = [
   "code",
   "chat",
   "send",
+  "sun",
+  "moon",
 ];
 
 describe("Icon", () => {
+  it.each(ALL_ICON_NAMES)("draws at least one shape for %s", (name) => {
+    const { container } = render(<Icon name={name} />);
+
+    expect(container.querySelector("svg")?.children.length).toBeGreaterThan(0);
+  });
+
   it.each(ALL_ICON_NAMES)("renders %s as a decorative, hidden svg", (name) => {
     const { container } = render(<Icon name={name} />);
     const svg = container.querySelector("svg");

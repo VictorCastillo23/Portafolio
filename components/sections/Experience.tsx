@@ -55,7 +55,7 @@ export function Experience() {
               aria-controls={`${baseId}-panel-${job.id}`}
               tabIndex={isSelected ? 0 : -1}
               onClick={() => setActiveIndex(index)}
-              className={`px-4 py-3 font-mono text-sm motion-safe:transition-colors ${
+              className={`px-4 py-3 text-sm motion-safe:transition-colors ${
                 isSelected ? "border-b-2 border-accent text-accent" : "text-muted hover:text-text"
               }`}
             >
@@ -75,10 +75,10 @@ export function Experience() {
           tabIndex={0}
           className="mt-6"
         >
-          <h3 className="font-sans text-lg font-bold text-text">
+          <h3 className="font-heading text-lg font-bold text-primary">
             {job.role} <span className="text-muted">· {job.company}</span>
           </h3>
-          <p className="mt-1 font-mono text-xs text-muted">{job.range}</p>
+          <p className="mt-1 text-xs text-muted">{job.range}</p>
           <ul className="mt-4 space-y-2">
             {job.bullets.map((bullet, bulletIndex) => (
               <li key={bulletIndex} className="flex gap-2 text-sm text-muted">

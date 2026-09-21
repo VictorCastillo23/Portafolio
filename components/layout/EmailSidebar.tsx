@@ -11,7 +11,7 @@ export function EmailSidebar() {
     <div className="fixed inset-y-0 right-0 z-40 hidden w-16 flex-col items-center justify-end pb-8 xl:flex">
       <a
         href={`mailto:${content.contact.email}`}
-        className="font-mono text-xs tracking-wide text-muted [writing-mode:vertical-rl] motion-safe:transition-colors hover:text-accent"
+        className="text-xs tracking-wide text-muted [writing-mode:vertical-rl] motion-safe:transition-colors hover:text-accent"
       >
         {content.contact.email}
       </a>

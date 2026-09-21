@@ -1,15 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #14101b;
-  --color-surface: #1e1828;
-  --color-line: #3a3350;
-  --color-text: #ede7f2;
-  --color-muted: #a79fb4;
-  --color-accent: #ffb35c;
+  --color-ink: #f1f5ff;
+  --color-surface: #ffffff;
+  --color-line: #c6d4f3;
+  --color-text: #0e1527;
+  --color-primary: #0f172a;
+  --color-accent: #343f58;
+  /* Not in the design spec: 70% Text over Background (~6.5:1 on the page bg). */
+  --color-muted: #525868;
 
-  --font-sans: var(--font-manrope);
-  --font-mono: var(--font-jetbrains-mono);
+  --font-sans: var(--font-google-sans);
+  --font-heading: var(--font-epilogue);
+}
+
+/* Dark theme, derived from the light palette: page bg = Primary, text = the
+   light Background, accent = the light Border. Surface and line are derived
+   in between; muted is 70% text over the bg. Applied by the inline script in
+   app/layout.tsx / ThemeToggle via data-theme on <html>. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: #0f172a;
+  --color-surface: #1b2438;
+  --color-line: #2a3550;
+  --color-text: #f1f5ff;
+  --color-primary: #f1f5ff;
+  --color-accent: #c6d4f3;
+  --color-muted: #adb2bf;
 }
 
 body {

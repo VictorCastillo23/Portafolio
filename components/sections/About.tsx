@@ -19,22 +19,22 @@ export function About() {
         </div>
 
         <div>
-          <h3 className="font-mono text-sm text-accent">Stack</h3>
+          <h3 className="text-sm text-accent">Stack</h3>
           <ul className="mt-3 flex flex-wrap gap-2">
             {skills.map((skill) => (
               <li
                 key={skill}
-                className="rounded border border-line px-2 py-1 font-mono text-xs text-muted"
+                className="rounded border border-line px-2 py-1 text-xs text-muted"
               >
                 {skill}
               </li>
             ))}
           </ul>
 
-          <h3 className="mt-8 font-mono text-sm text-accent">Educación</h3>
+          <h3 className="mt-8 text-sm text-accent">Educación</h3>
           <p className="mt-3 font-sans text-sm font-bold text-text">{education.degree}</p>
           <p className="text-sm text-muted">{education.school}</p>
-          <p className="font-mono text-xs text-muted">{education.range}</p>
+          <p className="text-xs text-muted">{education.range}</p>
           <p className="mt-2 text-sm text-muted">{education.detail}</p>
         </div>
       </div>

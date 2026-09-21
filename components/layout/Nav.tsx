@@ -20,6 +20,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SECTION_IDS, content } from "../../data/content";
 import { useActiveSection } from "../../lib/useActiveSection";
+import { ThemeToggle } from "./ThemeToggle";
 
 function getInitials(name: string): string {
   return name
@@ -73,7 +74,7 @@ export function Nav() {
         aria-label="Navegación principal"
         className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 md:h-20"
       >
-        <a href="#hero" onClick={closeMenu} className="font-mono text-lg font-bold text-accent">
+        <a href="#hero" onClick={closeMenu} className="text-lg font-bold text-accent">
           {getInitials(content.meta.name)}
         </a>
 
@@ -85,7 +86,7 @@ export function Nav() {
                 <a
                   href={`#${item.id}`}
                   aria-current={isActive ? "page" : undefined}
-                  className={`font-mono text-sm motion-safe:transition-colors ${
+                  className={`text-sm motion-safe:transition-colors ${
                     isActive ? "text-accent" : "text-muted hover:text-text"
                   }`}
                 >
@@ -97,29 +98,32 @@ export function Nav() {
           })}
         </ul>
 
-        <button
-          ref={toggleRef}
-          type="button"
-          aria-expanded={isOpen}
-          aria-controls="mobile-nav-menu"
-          aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
-          onClick={() => setIsOpen((previous) => !previous)}
-          className="flex h-11 w-11 items-center justify-center text-text md:hidden"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            focusable="false"
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <button
+            ref={toggleRef}
+            type="button"
+            aria-expanded={isOpen}
+            aria-controls="mobile-nav-menu"
+            aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+            onClick={() => setIsOpen((previous) => !previous)}
+            className="flex h-11 w-11 items-center justify-center text-text md:hidden"
           >
-            {isOpen ? <path d="M18 6 6 18M6 6l12 12" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {isOpen ? <path d="M18 6 6 18M6 6l12 12" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+            </svg>
+          </button>
+        </div>
       </nav>
 
       <ul
@@ -138,7 +142,7 @@ export function Nav() {
                 href={`#${item.id}`}
                 aria-current={isActive ? "page" : undefined}
                 onClick={closeMenu}
-                className={`block py-2 font-mono text-sm ${isActive ? "text-accent" : "text-muted"}`}
+                className={`block py-2 text-sm ${isActive ? "text-accent" : "text-muted"}`}
               >
                 <span aria-hidden="true">{item.index} </span>
                 {item.label}

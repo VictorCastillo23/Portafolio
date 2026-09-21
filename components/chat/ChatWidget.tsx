@@ -118,7 +118,7 @@ export function ChatWidget() {
           className="fixed inset-x-4 bottom-20 top-20 z-50 flex flex-col rounded-lg border border-line bg-surface shadow-lg md:inset-x-auto md:top-auto md:bottom-24 md:right-6 md:h-[min(32rem,70vh)] md:w-96 xl:right-24"
         >
           <header className="border-b border-line px-4 py-3">
-            <h2 id="chat-widget-title" className="font-sans text-sm font-bold text-text">
+            <h2 id="chat-widget-title" className="font-heading text-sm font-bold text-primary">
               Asistente virtual
             </h2>
           </header>
