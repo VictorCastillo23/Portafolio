@@ -19,13 +19,28 @@ export function Credentials() {
     <Section id="credentials" index={navItem.index} title={navItem.label}>
       <ul className="grid gap-6 sm:grid-cols-2">
         {content.credentials.map((credential) => (
-          <li key={credential.title} className="rounded-lg border border-line bg-surface p-6">
+          <li
+            key={credential.title}
+            className={`rounded-lg border border-line bg-surface p-6${
+              credential.url
+                ? " group relative motion-safe:transition-colors hover:border-accent focus-within:border-accent"
+                : ""
+            }`}
+          >
             <span className="font-mono text-xs uppercase tracking-wide text-accent">
               {KIND_LABEL[credential.kind]}
             </span>
             <h3 className="mt-2 font-sans text-lg font-bold text-text">
               {credential.url ? (
-                <a href={credential.url} target="_blank" rel="noreferrer" className="hover:text-accent">
+                // Stretched link: ::after covers the whole card, so a click
+                // anywhere on it opens the url without nesting interactive
+                // elements or wrapping the card's text in a giant link name.
+                <a
+                  href={credential.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="after:absolute after:inset-0 after:content-[''] motion-safe:transition-colors group-hover:text-accent focus-visible:text-accent"
+                >
                   {credential.title}
                 </a>
               ) : (
