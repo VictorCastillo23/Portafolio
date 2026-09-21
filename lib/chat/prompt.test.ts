@@ -53,6 +53,10 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toMatch(/do not (invent|fabricate|make up|write a placeholder)/i);
   });
 
+  it("forbids composing or guessing contact details from the name or domain", () => {
+    expect(prompt).toMatch(/never (compose|derive|guess).*(email|contact|phone)/i);
+  });
+
   it("instructs the assistant to refer to Victor in the third person, never as the visitor", () => {
     expect(prompt).toMatch(/third person/i);
     expect(prompt).toMatch(/visitor is not Victor|not addressing Victor|regardless of how the visitor phrases/i);

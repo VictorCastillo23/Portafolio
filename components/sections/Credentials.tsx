@@ -9,6 +9,7 @@ const KIND_LABEL: Record<Credential["kind"], string> = {
   award: "Premio",
   publication: "Publicación",
   certification: "Certificación",
+  rutaAprendizaje:"Ruta de Aprendizaje",
 };
 
 export function Credentials() {

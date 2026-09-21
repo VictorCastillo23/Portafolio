@@ -88,6 +88,17 @@ describe("lexicalScores", () => {
     expect(scores.has("contact")).toBe(false);
   });
 
+  it("indexes chunk titles, not just body text — a title-only term still seeds its chunk", () => {
+    const chunks = [
+      chunk({ id: "contact", title: "Contacto", text: "Escríbeme y con gusto platicamos." }),
+      chunk({ id: "other", title: "Otro", text: "Texto sin relación con la consulta." }),
+    ];
+
+    const scores = lexicalScores(chunks, "contacto");
+
+    expect(scores.has("contact")).toBe(true);
+  });
+
   it("still finds a match when the query mixes a matching term with terms absent from the corpus — the natural-language-question scenario (discovered during Phase 5 apply: FlexSearch's default search() requires ALL query terms to match, which silently empties every realistic multi-word visitor question)", () => {
     const chunks = [
       chunk({
@@ -364,5 +375,11 @@ describe("contract: real data/search-index.json", () => {
     const results = retrieve("¿Qué hiciste en Juventudes?", realIndex);
 
     expect(results[0]?.id).toBe("experience-juventudes");
+  });
+
+  it("a contact-info question surfaces the contact chunk (regression: the contact chunk body contains no 'contacto' token, only its title does)", () => {
+    const results = retrieve("información de contacto", realIndex);
+
+    expect(results.map((r) => r.id)).toContain("contact");
   });
 });

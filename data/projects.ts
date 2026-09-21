@@ -24,53 +24,43 @@ export interface ProjectCuration {
 
 export const PROJECT_CURATION: readonly ProjectCuration[] = [
   {
-    repo: "Es_Vitrina",
-    tier: "featured",
-    order: 1,
-    title: "Es Vitrina",
-    description:
-      "Plataforma donde jóvenes publican y recomiendan obras académicas y artísticas (investigaciones, ilustraciones, poesía, proyectos) organizadas por disciplina, con comentarios, likes y revistas temáticas mensuales curadas por administradores. Full stack con Next.js 16, React 19 y TypeScript sobre Supabase (PostgreSQL, Auth, Storage), con seguridad basada en RLS y RPC en lugar de lógica en el servidor Next. Desplegado en producción en esvitrina.com.",
-    // GitHub returns no topics for this repo; the real stack (from the CV's
-    // own "Stack:" line) is spelled out explicitly here to match the
-    // approved wireframe instead of falling back to just "TypeScript".
-    stack: ["TypeScript", "Next.js", "React", "PostgreSQL", "REST API"],
-  },
-  {
-    repo: "CameraChatbot",
-    tier: "featured",
-    order: 2,
-    title: "CameraChatbot",
-    // Based on the CV's Emerald Digital work but not the same project —
-    // per explicit user instruction, no cross-reference between the two.
-    // Description grounded directly in the repo's own CLAUDE.md/docs, not
-    // the CV bullet points.
-    description:
-      "Pipeline de visión por computadora en Python: detecta personas en video, les asigna una identidad persistente entre frames y videos mediante re-identificación (YOLO + embeddings mediante FAISS), y agrega pose, atención facial, gestos y atributos como emoción y edad sobre cada detección. Persiste los resultados en PostgreSQL para su explotación analítica.",
-    stack: ["Python", "YOLO", "PostgreSQL"],
-  },
-  {
     repo: "Modulo-inventario",
-    tier: "other",
+    tier: "featured",
     order: 1,
     title: "Módulo de Inventario",
     description:
       "Aplicación web de gestión de inventario para almacenes: alta y baja de productos, entradas y salidas de stock, histórico de movimientos y permisos diferenciados por rol (Administrador / Almacenista). Arquitectura MVC en Java con Jakarta EE 10, Servlets/JSP y JDBC puro sobre MySQL, desplegable en Tomcat.",
-    stack: ["Java", "Jakarta EE", "JSP", "MySQL", "Maven"],
+    stack: ["Java", "Jakarta EE", "JSP", "JDBC", "MySQL", "Maven"],
+    demoUrl: "https://modulo-inventario-app.azurewebsites.net/",
+  },
+  {
+    repo: "Es_Vitrina",
+    tier: "featured",
+    order: 2,
+    title: "Es Vitrina",
+    description:
+      "Plataforma donde jóvenes publican y recomiendan obras académicas y artísticas (investigaciones, ilustraciones, poesía, proyectos) organizadas por disciplina, con comentarios, likes y revistas temáticas mensuales curadas por administradores. Full stack con Next.js 16, React 19 y TypeScript sobre Supabase (PostgreSQL, Auth, Storage), con seguridad basada en RLS y RPC en lugar de lógica en el servidor Next. Desplegado en producción en esvitrina.com.",
+    stack: ["TypeScript", "Next.js", "React", "PostgreSQL", "REST API"],
+    demoUrl: "https://esvitrina.com",
   },
   {
     repo: "Risk-Game",
     tier: "other",
-    order: 2,
+    order: 1,
     title: "Risk Game",
-    // GitHub's own description ("Una copia del juego RISK llevada a C#") was
-    // technically accurate but told none of the real story; overridden with
-    // detail from the repo's own README (Risk.Domain/Risk.Engine/Risk.Web
-    // split, deployment target) since GitHub's API never exposes README body
-    // content — only the one-line description/language/topics fields.
     description:
       "Implementación completa y jugable del juego de mesa RISK como app web: motor de reglas propio (mapa clásico de 42 territorios, combate, refuerzos, cartas, fases de turno) separado de la interfaz jugable en Blazor Server, con tablero SVG de grilla hexagonal. Preparada para sumar un jugador de IA sin acceso a información oculta. Desplegada en Azure App Service.",
     stack: ["C#", ".NET 8", "Blazor Server"],
     demoUrl: "https://risk-game-bghugbfnhfhjhmh0.mexicocentral-01.azurewebsites.net/",
+  },
+  {
+    repo: "Keyseer",
+    tier: "other",
+    order: 2,
+    title: "Keyseer",
+    description:
+      "Algoritmo de investigación para detección de keyframes en video por consolidación de componentes en un modelo de mezcla gaussiana online (MOG2): en vez de colapsar el mecanismo de poda a una máscara binaria de foreground/background, lee explícitamente la señal de consolidación que ese mecanismo descarta para distinguir eventos transitorios de eventos persistentes. Contribución teórica formalizada como proposición matemática y verificada empíricamente; documentado con transparencia como prototipo de investigación, no listo para producción.",
+    stack: ["Python", "NumPy"],
   },
   {
     repo: "Tutorial-Open-CV-para-principiantes-con-Python",

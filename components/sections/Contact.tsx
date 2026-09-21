@@ -17,13 +17,15 @@ export function Contact() {
         <h3 className="mt-2 font-sans text-3xl font-bold text-text">{title}</h3>
         <p className="mt-4 text-muted">{blurb}</p>
 
-        <a
-          href={`mailto:${email}`}
-          className="mt-8 inline-flex items-center gap-2 rounded-md border border-accent px-6 py-3 font-mono text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
-        >
-          <Icon name="mail" className="h-4 w-4" />
-          {email}
-        </a>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <a
+            href={`mailto:${email}`}
+            className="inline-flex items-center gap-2 rounded-md border border-accent px-6 py-3 font-mono text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
+          >
+            <Icon name="mail" className="h-4 w-4" />
+            {email}
+          </a>
+        </div>
 
         <p className="mt-4 font-mono text-sm text-muted">{phone}</p>
 

@@ -18,6 +18,7 @@
 // insertion, one announcement, holding the final text. The visible text
 // still grows in real time for sighted users throughout.
 
+import type { ReactNode } from "react";
 import type { ChatUIMessage } from "./useChatStream";
 import { Icon } from "../ui/Icon";
 
@@ -28,6 +29,7 @@ interface ChatMessageProps {
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
   const isAwaitingFirstDelta = !isUser && message.streaming && message.content.length === 0;
+  const renderedContent = isUser ? message.content : renderInlineMarkdown(message.content);
 
   return (
     <li className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -65,10 +67,17 @@ export function ChatMessage({ message }: ChatMessageProps) {
             aria-hidden={!isUser && message.streaming ? "true" : undefined}
             className="whitespace-pre-wrap"
           >
-            {message.content}
+            {renderedContent}
           </p>
         )}
       </div>
     </li>
+  );
+}
+
+function renderInlineMarkdown(content: string): ReactNode[] {
+  const parts = content.split(/\*\*(.+?)\*\*/g);
+  return parts.map((part, index) =>
+    index % 2 === 1 ? <strong key={index}>{part}</strong> : <span key={index}>{part}</span>,
   );
 }

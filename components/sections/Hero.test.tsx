@@ -22,6 +22,22 @@ describe("Hero", () => {
     expect(cta).toHaveAttribute("href", content.hero.cta.href);
   });
 
+  it("renders a Download CV link pointing at /victor_cv.pdf with a download attribute", () => {
+    render(<Hero />);
+
+    const link = screen.getByRole("link", { name: /download cv/i });
+    expect(link).toHaveAttribute("href", "/victor_cv.pdf");
+    expect(link).toHaveAttribute("download");
+  });
+
+  it("renders the portrait above the eyebrow", () => {
+    render(<Hero />);
+
+    const portrait = screen.getByRole("img", { name: /victor castillo/i });
+    expect(portrait).toHaveAttribute("alt", "Victor Castillo");
+    expect(portrait.getAttribute("src") ?? "").toContain("profile.png");
+  });
+
   it("has no accessibility violations", async () => {
     const { container } = render(<Hero />);
     await expectNoA11yViolations(container);

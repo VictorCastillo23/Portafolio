@@ -11,6 +11,8 @@
 // inside `@media (prefers-reduced-motion: no-preference)`, so reduced-motion
 // users see the finished layout immediately instead of a blank hero.
 
+import Image from "next/image";
+
 import { content } from "../../data/content";
 
 export function Hero() {
@@ -21,6 +23,14 @@ export function Hero() {
       id="hero"
       className="flex min-h-screen flex-col justify-center px-6 sm:px-12 lg:px-24"
     >
+      <Image
+        src="/profile.png"
+        alt="Victor Castillo"
+        width={128}
+        height={128}
+        priority
+        className="animate-rise-in-100 mb-8 h-28 w-28 rounded-full object-cover sm:h-32 sm:w-32"
+      />
       <p className="animate-rise-in-100 font-mono text-sm text-accent sm:text-base">{eyebrow}</p>
       <h1 className="animate-rise-in-200 mt-4 font-sans text-4xl font-extrabold text-text sm:text-6xl">
         {title}
@@ -29,12 +39,21 @@ export function Hero() {
         {tagline}
       </h2>
       <p className="animate-rise-in-400 mt-6 max-w-xl text-base text-muted sm:text-lg">{blurb}</p>
-      <a
-        href={cta.href}
-        className="animate-rise-in-500 mt-10 inline-flex w-fit items-center rounded-md border border-accent px-6 py-3 font-mono text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
-      >
-        {cta.label}
-      </a>
+      <div className="mt-10 flex flex-wrap gap-4">
+        <a
+          href={cta.href}
+          className="animate-rise-in-500 inline-flex w-fit items-center rounded-md border border-accent px-6 py-3 font-mono text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
+        >
+          {cta.label}
+        </a>
+        <a
+          href="/victor_cv.pdf"
+          download
+          className="animate-rise-in-600 inline-flex w-fit items-center rounded-md border border-accent px-6 py-3 font-mono text-sm text-accent motion-safe:transition-colors hover:bg-accent hover:text-ink"
+        >
+          Descargar CV
+        </a>
+      </div>
     </section>
   );
 }

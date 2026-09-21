@@ -88,6 +88,24 @@ describe("ChatMessage", () => {
     expect(indicator).not.toBeNull();
   });
 
+  it("renders **bold** markers as strong elements instead of plain text", () => {
+    const message: ChatUIMessage = {
+      id: "6",
+      role: "assistant",
+      content: "Tengo experiencia en **Next.js** y React.",
+    };
+    const { container } = render(
+      <ul>
+        <ChatMessage message={message} />
+      </ul>,
+    );
+
+    const strong = container.querySelector("strong");
+    expect(strong).not.toBeNull();
+    expect(strong).toHaveTextContent("Next.js");
+    expect(container.querySelector("p")?.textContent).not.toContain("**");
+  });
+
   it("has no accessibility violations", async () => {
     const message: ChatUIMessage = {
       id: "5",

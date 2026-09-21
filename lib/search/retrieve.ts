@@ -103,7 +103,9 @@ const SPANISH_ENCODER = {
 function buildLexicalIndex(chunks: readonly IndexedChunk[]): Index {
   const flexIndex = new Index({ encoder: SPANISH_ENCODER });
   for (const chunk of chunks) {
-    flexIndex.add(chunk.id, chunk.text);
+    // Title carries signal the body often lacks (e.g. the "contact" chunk
+    // body never contains "contacto" — only its title does), so index both.
+    flexIndex.add(chunk.id, `${chunk.title} ${chunk.text}`);
   }
   return flexIndex;
 }
