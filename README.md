@@ -20,7 +20,6 @@ proyectos de GitHub
 | `npm run lint` | ESLint |
 | `npm run fetch:github` | Actualiza el snapshot `data/github-repos.json` desde la API de GitHub |
 | `npm run lint:content` | Revisa huecos de contenido con `scripts/check-content.ts` |
-| `npm run build:search-index` | Regenera el índice de búsqueda del chat (ver más abajo) |
 
 ## Datos del proyecto
 
@@ -60,26 +59,25 @@ script de Vercel en lugar de la de producción.
 
 ## Chat con IA (opcional)
 
-El sitio incluye un asistente de chat con RAG (retrieval-augmented generation)
-que responde preguntas sobre mi experiencia, proyectos y stack usando Claude
-de Anthropic. Es completamente opcional: si las variables de entorno no están
-configuradas, el widget simplemente no se monta y el sitio queda 100% estático
-(nada se rompe en `next build` ni en producción).
+El sitio incluye un asistente de chat que responde preguntas sobre mi
+experiencia, proyectos y stack usando Claude de Anthropic. Es completamente
+opcional: si las variables de entorno no están configuradas, el widget
+simplemente no se monta y el sitio queda 100% estático (nada se rompe en
+`next build` ni en producción).
 
-La retrieval usa un índice de búsqueda pregenerado (`data/search-index.json`,
-committeado al repo) en vez de embeddings en vivo, así que no hace falta
-ningún modelo pesado corriendo en producción. Para regenerar ese índice
-después de tocar `data/content.ts` o `data/projects.ts`:
+El asistente no usa búsqueda ni índices: `lib/chat/knowledge.ts` arma la base de
+conocimiento completa a partir de `data/content.ts` y de la lista de proyectos
+(`data/projects.ts` + el snapshot de GitHub), y `app/api/chat/route.ts` la envía
+en el prompt de sistema en cada petición, porque la API de Anthropic no guarda
+estado entre llamadas. Por eso no hay nada que regenerar: basta con editar
+`data/content.ts` o `data/projects.ts`. El asistente cita en texto plano el nombre
+de la sección de la que sacó cada dato; no se muestran links ni "chips" de
+fuentes bajo las respuestas.
 
-```bash
-npm run build:search-index
-```
-
-Este script es un wrapper: la primera vez que corre, instala y compila el
-sub-paquete aislado en `tools/search-index-builder/` (tiene su propio
-`package.json`/lockfile, separado de la raíz, porque su dependencia de
-embeddings locales es pesada y no hace falta en el deploy). Después de eso,
-sobrescribe `data/search-index.json` con el índice actualizado.
+Un test (`lib/chat/knowledge.test.ts`) falla si la base de conocimiento supera
+`KNOWLEDGE_CHAR_BUDGET` (30 000 caracteres). Si eso ocurre, el contenido ya creció
+más allá de lo que conviene enviar completo en cada petición y hay que reconsiderar
+una estrategia de recuperación en lugar de subir el límite sin más.
 
 Para habilitar el chat en un entorno propio, copiá `.env.example` a
 `.env.local` y completá:
@@ -87,4 +85,4 @@ Para habilitar el chat en un entorno propio, copiá `.env.example` a
 | Variable | Para qué sirve |
 |---|---|
 | `ANTHROPIC_API_KEY` | Habilita el chat. Si falta, el widget no se monta (chequeado server-side en `app/page.tsx`, nunca expuesto al cliente). |
-| `ANTHROPIC_MODEL` | Modelo de Claude a usar. Si no se define, usa un default razonable (ver `lib/chat/`). |
+| `ANTHROPIC_MODEL` | Modelo de Claude a usar. Si no se define, usa un default razonable (ver `app/api/chat/route.ts`). |

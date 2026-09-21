@@ -1,7 +1,7 @@
 // Shared inline SVG icon set (design Part 4, extended by the chat widget —
 // tasks 6.1). Originally scoped to exactly the six icons the design called
 // for: github, linkedin, mail, external, folder, code. `chat` and `send`
-// were added for the RAG chat widget's launcher button and composer submit
+// were added for the chat widget's launcher button and composer submit
 // button, matching the same Feather-style stroke-based convention (source:
 // Feather's `message-circle` and `send` icons). Icons are always decorative
 // (aria-hidden) — the accessible name for any icon-only control belongs on

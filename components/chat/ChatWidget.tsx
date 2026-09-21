@@ -1,6 +1,6 @@
 "use client";
 
-// RAG chat widget (design "Widget Shape", tasks 6.4). Client component,
+// Chat widget (design "Widget Shape", tasks 6.4). Client component,
 // owns open/closed UI state and wires `useChatStream` to `ChatMessage`.
 // Only mounted by app/page.tsx when `ANTHROPIC_API_KEY` is present
 // (Phase 7) — this component itself has no env awareness.
