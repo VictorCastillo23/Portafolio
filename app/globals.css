@@ -17,6 +17,16 @@ body {
   color: var(--color-text);
 }
 
+/* Justify body copy. Kept in the base layer so explicit utilities such as
+   `text-center` (Footer) still win. `hyphens: auto` relies on <html lang="es">
+   and avoids wide word gaps on narrow lines. */
+@layer base {
+  p {
+    text-align: justify;
+    hyphens: auto;
+  }
+}
+
 /* Every section is a scroll-spy / anchor target; keep it clear of the fixed nav. */
 section[id] {
   scroll-margin-top: 5rem;

@@ -1,6 +1,8 @@
 // Render/a11y smoke test (presentational component, design's test-scoping
 // decision — see Phase 5 apply notes for why this is not strict TDD).
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { content } from "../../data/content";
@@ -25,7 +27,7 @@ describe("Hero", () => {
   it("renders a Download CV link pointing at /victor_cv.pdf with a download attribute", () => {
     render(<Hero />);
 
-    const link = screen.getByRole("link", { name: /download cv/i });
+    const link = screen.getByRole("link", { name: /descargar cv/i });
     expect(link).toHaveAttribute("href", "/victor_cv.pdf");
     expect(link).toHaveAttribute("download");
   });

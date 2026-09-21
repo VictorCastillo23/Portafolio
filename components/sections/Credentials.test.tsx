@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { content } from "../../data/content";
 import { expectNoA11yViolations } from "../../vitest.setup";
 import { Credentials } from "./Credentials";
 
@@ -23,6 +24,33 @@ describe("Credentials", () => {
     expect(
       screen.getByText("Google Data Analytics — Preparar datos para la exploración"),
     ).toBeInTheDocument();
+  });
+
+  it("links every credential to its url", () => {
+    render(<Credentials />);
+
+    for (const credential of content.credentials) {
+      if (!credential.url) continue;
+      const link = screen.getByRole("link", { name: credential.title });
+      expect(link).toHaveAttribute("href", credential.url);
+      expect(link).toHaveAttribute("target", "_blank");
+    }
+  });
+
+  it("makes the whole card clickable and highlights the title on card hover", () => {
+    render(<Credentials />);
+
+    for (const credential of content.credentials) {
+      if (!credential.url) continue;
+      const link = screen.getByRole("link", { name: credential.title });
+      const card = link.closest("li")!;
+
+      // Stretched link: the anchor's ::after covers the whole (relative) card.
+      expect(card).toHaveClass("relative", "group");
+      expect(link).toHaveClass("after:absolute", "after:inset-0");
+      // Title turns accent when hovering anywhere on the card.
+      expect(link).toHaveClass("group-hover:text-accent");
+    }
   });
 
   it("has no accessibility violations", async () => {
