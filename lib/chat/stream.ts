@@ -1,27 +1,19 @@
 // SSE encoding for POST /api/chat (design "Interfaces / Contracts" — the
 // exact response wire format):
 //
-//   event: sources  data: {"sources":[{"id","section","title","anchor","url"}]}
 //   event: delta    data: {"text":"..."}
 //   event: done     data: {}
 //   event: error    data: {"code":"upstream_error","message":"..."}   // mid-stream only
 //
+// The sequence a successful response emits is `delta* -> done`; a mid-stream
+// failure ends it with a terminal `error` instead.
+//
 // Pure encoding + a pure stream-transform helper only. No network calls, no
-// Anthropic SDK import here — Phase 5's route handler owns turning Claude's
+// Anthropic SDK import here — the route handler owns turning Claude's
 // real streaming response into a `ChatSseEvent` sequence and piping it
 // through `toSseStream()`.
 
-/** One retrieved chunk surfaced to the client as a citation (design response shape). */
-export interface ChatSource {
-  id: string;
-  section: string;
-  title: string;
-  anchor: string;
-  url: string | null;
-}
-
 export type ChatSseEvent =
-  | { type: "sources"; sources: ChatSource[] }
   | { type: "delta"; text: string }
   | { type: "done" }
   | { type: "error"; code: string; message: string };
@@ -39,8 +31,6 @@ export function sseEncode(event: ChatSseEvent): string {
 /** Strips the `type` discriminant, leaving only the fields that belong in `data:`. */
 function toPayload(event: ChatSseEvent): Record<string, unknown> {
   switch (event.type) {
-    case "sources":
-      return { sources: event.sources };
     case "delta":
       return { text: event.text };
     case "done":

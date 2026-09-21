@@ -1,14 +1,14 @@
 // TDD suite for SSE encoding (design "Interfaces / Contracts" — the exact
 // POST /api/chat response wire format):
 //
-//   event: sources  data: {"sources":[{"id","section","title","anchor","url"}]}
 //   event: delta    data: {"text":"..."}
 //   event: done     data: {}
 //   event: error    data: {"code":"upstream_error","message":"..."}   // mid-stream only
 //
 // Pure encoding only — no network, no Anthropic SDK. `toSseStream` is fed a
 // synthetic async iterable here; Phase 5's route handler is responsible for
-// producing the real one from Claude's streaming response.
+// producing the real one from Claude's streaming response. The event set is
+// delta | done | error; retrieval was removed, so there is no `sources` event.
 
 import { describe, expect, it } from "vitest";
 import { sseEncode, toSseStream, type ChatSseEvent } from "./stream";
@@ -29,25 +29,6 @@ async function collect(stream: AsyncGenerator<Uint8Array>): Promise<string> {
 }
 
 describe("sseEncode", () => {
-  it("encodes a sources event matching the design's exact wire format", () => {
-    const event: ChatSseEvent = {
-      type: "sources",
-      sources: [
-        { id: "experience-juventudes", section: "experience", title: "Juventudes", anchor: "#experience", url: null },
-      ],
-    };
-
-    const encoded = sseEncode(event);
-
-    expect(encoded).toBe(
-      `event: sources\ndata: ${JSON.stringify({
-        sources: [
-          { id: "experience-juventudes", section: "experience", title: "Juventudes", anchor: "#experience", url: null },
-        ],
-      })}\n\n`,
-    );
-  });
-
   it("encodes a delta event", () => {
     const encoded = sseEncode({ type: "delta", text: "Hola, " });
 
@@ -76,10 +57,6 @@ describe("sseEncode", () => {
 describe("toSseStream", () => {
   it("encodes an async sequence of events into the concatenated SSE wire format, in order", async () => {
     const events: ChatSseEvent[] = [
-      {
-        type: "sources",
-        sources: [{ id: "contact", section: "contact", title: "Contacto", anchor: "#contact", url: null }],
-      },
       { type: "delta", text: "Hola" },
       { type: "delta", text: " mundo" },
       { type: "done" },

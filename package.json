@@ -11,14 +11,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "fetch:github": "tsx scripts/fetch-github.ts",
-    "lint:content": "tsx scripts/check-content.ts",
-    "build:search-index": "npm install --prefix tools/search-index-builder && npm run build --prefix tools/search-index-builder"
+    "lint:content": "tsx scripts/check-content.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
-    "flexsearch": "^0.8.212",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8"

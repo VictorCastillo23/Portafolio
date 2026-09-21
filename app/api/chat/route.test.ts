@@ -1,10 +1,10 @@
 // Integration-style suite for POST /api/chat (design "Interfaces /
 // Contracts", "Data Flow"). The route itself is thin wiring: these tests
 // mock only the one I/O boundary it touches directly (`@anthropic-ai/sdk`)
-// and exercise the REAL `lib/search/retrieve` + `lib/chat/prompt` logic
-// against the committed `data/search-index.json`, verifying the route
-// sequences retrieval -> prompt-building -> streaming -> SSE encoding
-// correctly, matching the exact wire contract.
+// and exercise the REAL `lib/chat/knowledge` + `lib/chat/prompt` logic
+// against the real site content, verifying the route embeds the whole
+// knowledge base in the `system` param, sends the visitor's raw question as
+// the last user turn, and streams `delta* -> done` with no `sources` event.
 //
 // App-level request limiting was removed by explicit product decision.
 // Limits are enforced solely by Anthropic at the account/API-key level,
@@ -12,6 +12,8 @@
 // own.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { content } from "../../../data/content";
 
 const { anthropicConstructorMock, streamMock } = vi.hoisted(() => ({
   anthropicConstructorMock: vi.fn(),
@@ -106,7 +108,7 @@ describe("POST /api/chat", () => {
     expect(streamMock).not.toHaveBeenCalled();
   });
 
-  it("streams sources -> delta* -> done in order, with the correct SSE headers, on a successful request", async () => {
+  it("streams delta* -> done in order, with the correct SSE headers, on a successful request", async () => {
     const response = await POST(postRequest({ message: "Que hiciste en Juventudes?" }));
 
     expect(response.status).toBe(200);
@@ -116,21 +118,18 @@ describe("POST /api/chat", () => {
 
     const events = await collectSseEvents(response);
 
-    expect(events[0]).toBe("sources");
-    expect(events.slice(1, -1)).toEqual(["delta", "delta"]);
+    expect(events.slice(0, -1)).toEqual(["delta", "delta"]);
     expect(events.at(-1)).toBe("done");
   });
 
-  it("surfaces the real retrieve() result in the sources event", async () => {
+  it("does not emit a sources event", async () => {
     const response = await POST(postRequest({ message: "Que hiciste en Juventudes?" }));
     const text = await response.text();
 
-    // Real retrieval against the committed data/search-index.json (mirrors
-    // Phase 2's contract test: "Juventudes" surfaces "experience-juventudes").
-    expect(text).toContain("experience-juventudes");
+    expect(text).not.toContain("event: sources");
   });
 
-  it("passes the retrieved context, system prompt, model, and max_tokens to the Anthropic stream call", async () => {
+  it("embeds the whole knowledge base in the system prompt, after the policy", async () => {
     const response = await POST(postRequest({ message: "Que hiciste en Juventudes?" }));
     await response.text();
 
@@ -139,11 +138,23 @@ describe("POST /api/chat", () => {
     expect(callArgs.model).toBe("claude-haiku-4-5-20251001");
     expect(callArgs.max_tokens).toBe(1024);
     expect(typeof callArgs.system).toBe("string");
-    expect(callArgs.system).toMatch(/context/i);
-    expect(Array.isArray(callArgs.messages)).toBe(true);
-    const lastMessage = callArgs.messages.at(-1);
-    expect(lastMessage.role).toBe("user");
-    expect(lastMessage.content).toContain("Que hiciste en Juventudes?");
+    expect(callArgs.system).toMatch(/knowledge/i);
+    expect(callArgs.system).toContain("<knowledge>");
+    expect(callArgs.system.indexOf("GROUNDING")).toBeLessThan(callArgs.system.indexOf("<knowledge>"));
+    // Real data, not a stub: every past employer from the CV is present,
+    // regardless of what the question asked about.
+    for (const job of content.experience) {
+      expect(callArgs.system).toContain(job.company);
+    }
+    expect(callArgs.system).toContain(content.contact.email);
+  });
+
+  it("sends the visitor's raw question as the last user turn (no context wrapper)", async () => {
+    const response = await POST(postRequest({ message: "Que hiciste en Juventudes?" }));
+    await response.text();
+
+    const callArgs = streamMock.mock.calls[0]?.[0];
+    expect(callArgs.messages).toEqual([{ role: "user", content: "Que hiciste en Juventudes?" }]);
   });
 
   it("uses ANTHROPIC_MODEL from the environment when present", async () => {
@@ -156,24 +167,19 @@ describe("POST /api/chat", () => {
     expect(callArgs.model).toBe("claude-sonnet-4-5");
   });
 
-  it("prepends validated history turns before the current context-block turn", async () => {
-    const response = await POST(
-      postRequest({
-        message: "Y que mas?",
-        history: [
-          { role: "user", content: "Que hiciste en Juventudes?" },
-          { role: "assistant", content: "Migre un sistema de PHP a Angular." },
-        ],
-      }),
-    );
+  it("prepends validated history turns before the current raw question", async () => {
+    const history = [
+      { role: "user", content: "Que hiciste en Juventudes?" },
+      { role: "assistant", content: "Migre un sistema de PHP a Angular." },
+    ];
+    const response = await POST(postRequest({ message: "Y que mas?", history }));
     await response.text();
 
     const callArgs = streamMock.mock.calls[0]?.[0];
-    expect(callArgs.messages).toHaveLength(3);
-    expect(callArgs.messages[0]).toEqual({ role: "user", content: "Que hiciste en Juventudes?" });
-    expect(callArgs.messages[1]).toEqual({ role: "assistant", content: "Migre un sistema de PHP a Angular." });
-    expect(callArgs.messages[2].role).toBe("user");
-    expect(callArgs.messages[2].content).toContain("Y que mas?");
+    expect(callArgs.messages).toHaveLength(history.length + 1);
+    expect(callArgs.messages[0]).toEqual(history[0]);
+    expect(callArgs.messages[1]).toEqual(history[1]);
+    expect(callArgs.messages.at(-1)).toEqual({ role: "user", content: "Y que mas?" });
   });
 
   it("emits a terminal error event instead of throwing when the Claude stream itself fails", async () => {
@@ -187,7 +193,6 @@ describe("POST /api/chat", () => {
 
     expect(response.status).toBe(200);
     const text = await response.text();
-    expect(text).toContain("event: sources");
     expect(text).toContain("event: error");
     expect(text).toContain("upstream network failure");
     expect(text).not.toContain("event: done");

@@ -48,6 +48,25 @@ function sseResponse(events: ChatSseEvent[], splitEvery = 17): Response {
   return new Response(streamFromChunks(chunks), { status: 200 });
 }
 
+/** A response whose body stays open until the test pushes frames, so the
+ * state between "stream started" and "first delta" can be observed. */
+function controllableSseResponse() {
+  const encoder = new TextEncoder();
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  const stream = new ReadableStream<Uint8Array>({
+    start(c) {
+      controller = c;
+    },
+  });
+  return {
+    response: new Response(stream, { status: 200 }),
+    push: (event: ChatSseEvent) => controller.enqueue(encoder.encode(sseEncode(event))),
+    pushRaw: (frame: string) => controller.enqueue(encoder.encode(frame)),
+    close: () => controller.close(),
+    fail: (reason: unknown) => controller.error(reason),
+  };
+}
+
 function jsonErrorResponse(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -67,10 +86,9 @@ describe("useChatStream", () => {
     expect(result.current.messages).toEqual([]);
   });
 
-  it("accumulates sources then streamed deltas into one assistant message, ending idle", async () => {
+  it("accumulates streamed deltas into the single assistant placeholder, ending idle", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       sseResponse([
-        { type: "sources", sources: [{ id: "about-summary", section: "about", title: "Sobre mí", anchor: "#about", url: null }] },
         { type: "delta", text: "Hola" },
         { type: "delta", text: " mundo" },
         { type: "done" },
@@ -92,7 +110,6 @@ describe("useChatStream", () => {
       role: "assistant",
       content: "Hola mundo",
       streaming: false,
-      sources: [{ id: "about-summary", section: "about", title: "Sobre mí", anchor: "#about", url: null }],
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -104,19 +121,71 @@ describe("useChatStream", () => {
     );
   });
 
+  it("adds the assistant placeholder as soon as the stream starts, before the first delta", async () => {
+    const stream = controllableSseResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(stream.response));
+
+    const { result } = renderHook(() => useChatStream());
+
+    let sendPromise!: Promise<void>;
+    act(() => {
+      sendPromise = result.current.sendMessage("hola");
+    });
+
+    await waitFor(() => expect(result.current.messages).toHaveLength(2));
+    expect(result.current.status).toBe("streaming");
+    expect(result.current.messages[1]).toMatchObject({ role: "assistant", content: "", streaming: true });
+
+    await act(async () => {
+      stream.push({ type: "delta", text: "Hola" });
+      stream.push({ type: "done" });
+      stream.close();
+      await sendPromise;
+    });
+
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.messages[1]).toMatchObject({ content: "Hola", streaming: false });
+  });
+
+  it("ignores a legacy sources frame without adding messages or fields", async () => {
+    const stream = controllableSseResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(stream.response));
+
+    const { result } = renderHook(() => useChatStream());
+
+    let sendPromise!: Promise<void>;
+    act(() => {
+      sendPromise = result.current.sendMessage("hola");
+    });
+    await waitFor(() => expect(result.current.messages).toHaveLength(2));
+
+    await act(async () => {
+      stream.pushRaw(
+        'event: sources\ndata: {"sources":[{"id":"about-summary","section":"about","title":"Sobre mí","anchor":"#about","url":null}]}\n\n',
+      );
+      stream.push({ type: "delta", text: "Hola" });
+      stream.push({ type: "done" });
+      stream.close();
+      await sendPromise;
+    });
+
+    expect(result.current.status).toBe("idle");
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.messages[1]).toMatchObject({ role: "assistant", content: "Hola", streaming: false });
+    expect(result.current.messages[1]).not.toHaveProperty("sources");
+  });
+
   it("sends prior turns as history on the next call", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
         sseResponse([
-          { type: "sources", sources: [] },
           { type: "delta", text: "Primera respuesta" },
           { type: "done" },
         ]),
       )
       .mockResolvedValueOnce(
         sseResponse([
-          { type: "sources", sources: [] },
           { type: "delta", text: "Segunda respuesta" },
           { type: "done" },
         ]),
@@ -161,12 +230,14 @@ describe("useChatStream", () => {
 
     await waitFor(() => expect(result.current.status).toBe("error"));
     expect(result.current.errorMessage).toBe("Chat is not configured on this deployment.");
+    // No assistant placeholder is created when the request never yields a stream.
+    expect(result.current.messages).toHaveLength(1);
+    expect(result.current.messages[0]).toMatchObject({ role: "user" });
   });
 
   it("marks the in-progress message as no longer streaming and surfaces a mid-stream error event", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       sseResponse([
-        { type: "sources", sources: [] },
         { type: "delta", text: "Respuesta parcial" },
         { type: "error", code: "upstream_error", message: "El modelo falló." },
       ]),
@@ -184,6 +255,28 @@ describe("useChatStream", () => {
     expect(result.current.messages[1]).toMatchObject({ content: "Respuesta parcial", streaming: false });
   });
 
+  it("stops the typing placeholder when the connection drops before the first delta", async () => {
+    const stream = controllableSseResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(stream.response));
+
+    const { result } = renderHook(() => useChatStream());
+
+    let sendPromise!: Promise<void>;
+    act(() => {
+      sendPromise = result.current.sendMessage("hola");
+    });
+    await waitFor(() => expect(result.current.messages).toHaveLength(2));
+
+    await act(async () => {
+      stream.fail(new Error("connection reset"));
+      await sendPromise;
+    });
+
+    expect(result.current.status).toBe("error");
+    expect(result.current.errorMessage).toBe("La conexión se interrumpió.");
+    expect(result.current.messages[1]).toMatchObject({ role: "assistant", content: "", streaming: false });
+  });
+
   it("sets an error status when the network request itself rejects", async () => {
     vi.stubGlobal(
       "fetch",
@@ -198,6 +291,8 @@ describe("useChatStream", () => {
 
     await waitFor(() => expect(result.current.status).toBe("error"));
     expect(result.current.errorMessage).toBeTruthy();
+    expect(result.current.messages).toHaveLength(1);
+    expect(result.current.messages[0]).toMatchObject({ role: "user" });
   });
 
   it("ignores empty or whitespace-only messages", async () => {
