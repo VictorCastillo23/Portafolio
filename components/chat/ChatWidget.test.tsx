@@ -9,7 +9,7 @@
 // Anthropic outside this app.
 
 import { fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { expectNoA11yViolations } from "../../vitest.setup";
 import { ChatWidget } from "./ChatWidget";
 import { useChatStream, type UseChatStreamResult } from "./useChatStream";
@@ -105,5 +105,52 @@ describe("ChatWidget", () => {
     fireEvent.click(screen.getByRole("button", { name: "Abrir chat" }));
 
     await expectNoA11yViolations(container);
+  });
+
+  describe("auto-scroll", () => {
+    const userMessage = { id: "1", role: "user", content: "Hola" } as const;
+    const assistantMessage = { id: "2", role: "assistant", content: "Hola, ¿qué tal?" } as const;
+
+    let scrollHeightSpy: MockInstance;
+
+    beforeEach(() => {
+      // jsdom reports scrollHeight as 0, so give the list some scrollable height.
+      scrollHeightSpy = vi.spyOn(Element.prototype, "scrollHeight", "get").mockReturnValue(500);
+    });
+
+    afterEach(() => {
+      scrollHeightSpy.mockRestore();
+    });
+
+    function getMessageList(container: HTMLElement): HTMLElement {
+      const list = container.querySelector<HTMLElement>('ul[aria-live="polite"]');
+      if (!list) {
+        throw new Error("message list not found");
+      }
+      return list;
+    }
+
+    it("scrolls the message list to the bottom when the panel opens with an existing conversation", () => {
+      stubStream({ messages: [userMessage, assistantMessage] });
+      const { container } = render(<ChatWidget />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Abrir chat" }));
+
+      expect(getMessageList(container).scrollTop).toBe(500);
+    });
+
+    it("scrolls to the bottom again when a new message arrives", () => {
+      stubStream({ messages: [userMessage] });
+      const { container, rerender } = render(<ChatWidget />);
+      fireEvent.click(screen.getByRole("button", { name: "Abrir chat" }));
+
+      const list = getMessageList(container);
+      list.scrollTop = 0;
+
+      stubStream({ messages: [userMessage, assistantMessage] });
+      rerender(<ChatWidget />);
+
+      expect(list.scrollTop).toBe(500);
+    });
   });
 });

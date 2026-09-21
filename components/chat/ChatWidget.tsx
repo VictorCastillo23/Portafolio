@@ -32,6 +32,7 @@ export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const [draft, setDraft] = useState("");
   const { messages, status, errorMessage, sendMessage } = useChatStream();
 
@@ -43,6 +44,14 @@ export function ChatWidget() {
       inputRef.current?.focus();
     }
   }, [isOpen]);
+
+  // Keep the latest message in view: on send, on every streamed delta, and on reopen.
+  useEffect(() => {
+    const list = listRef.current;
+    if (list) {
+      list.scrollTop = list.scrollHeight;
+    }
+  }, [messages, isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -114,7 +123,7 @@ export function ChatWidget() {
             </h2>
           </header>
 
-          <ul aria-live="polite" className="flex-1 space-y-3 overflow-y-auto p-4">
+          <ul ref={listRef} aria-live="polite" className="flex-1 space-y-3 overflow-y-auto p-4">
             {isFirstOpen ? (
               <li>
                 <p className="text-sm text-muted">
