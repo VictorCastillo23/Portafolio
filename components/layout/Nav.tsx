@@ -20,6 +20,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SECTION_IDS, content } from "../../data/content";
 import { useActiveSection } from "../../lib/useActiveSection";
+import { ThemeToggle } from "./ThemeToggle";
 
 function getInitials(name: string): string {
   return name
@@ -97,29 +98,32 @@ export function Nav() {
           })}
         </ul>
 
-        <button
-          ref={toggleRef}
-          type="button"
-          aria-expanded={isOpen}
-          aria-controls="mobile-nav-menu"
-          aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
-          onClick={() => setIsOpen((previous) => !previous)}
-          className="flex h-11 w-11 items-center justify-center text-text md:hidden"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            focusable="false"
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <button
+            ref={toggleRef}
+            type="button"
+            aria-expanded={isOpen}
+            aria-controls="mobile-nav-menu"
+            aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+            onClick={() => setIsOpen((previous) => !previous)}
+            className="flex h-11 w-11 items-center justify-center text-text md:hidden"
           >
-            {isOpen ? <path d="M18 6 6 18M6 6l12 12" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {isOpen ? <path d="M18 6 6 18M6 6l12 12" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+            </svg>
+          </button>
+        </div>
       </nav>
 
       <ul

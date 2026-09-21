@@ -27,6 +27,8 @@ function latestObserver() {
 
 afterEach(() => {
   document.body.innerHTML = "";
+  delete document.documentElement.dataset.theme;
+  localStorage.clear();
 });
 
 describe("Nav", () => {
@@ -100,6 +102,26 @@ describe("Nav", () => {
       "aria-expanded",
       "false",
     );
+  });
+
+  it("exposes the theme toggle in the top bar, outside the collapsible mobile menu", () => {
+    render(<Nav />);
+    const topBar = screen.getByRole("navigation", { name: "Navegación principal" });
+    const themeToggle = within(topBar).getByRole("button", { name: "Modo oscuro" });
+    const panel = document.getElementById("mobile-nav-menu") as HTMLElement;
+
+    expect(themeToggle).toHaveAttribute("aria-pressed", "false");
+    expect(panel.contains(themeToggle)).toBe(false);
+  });
+
+  it("switching the theme does not touch the mobile menu state", () => {
+    render(<Nav />);
+    const hamburger = screen.getByRole("button", { name: "Abrir menú" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Modo oscuro" }));
+
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(hamburger).toHaveAttribute("aria-expanded", "false");
   });
 
   it("highlights the active nav link reported by the scroll-spy hook", () => {
