@@ -31,10 +31,6 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules",
-    // Isolated tooling package with its own tsconfig/deps — see
-    // tools/search-index-builder/package.json for why it's kept out of the
-    // root's dependency graph (and therefore out of the root's type-check).
-    "tools"
+    "node_modules"
   ]
 }

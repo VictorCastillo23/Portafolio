@@ -3,8 +3,8 @@
 // Maps the CV content (data/content.ts) + merged project sections
 // (lib/projects.ts's mergeProjects() output) into ONE string that the chat
 // route embeds whole in the Anthropic `system` prompt. It replaces RAG
-// chunking: the text formats below are ported from the retired chunker
-// (lib/search/chunks.ts), but ids, anchors and urls are intentionally left
+// chunking: the text formats below are ported from the retired RAG chunker
+// (removed from the repo), but ids, anchors and urls are intentionally left
 // out — the model must not cite or link them.
 //
 // Pure: no I/O, no randomness, deterministic given the same inputs. The

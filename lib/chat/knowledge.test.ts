@@ -2,7 +2,7 @@
 // buildKnowledgeBase(content, sections)). The chat route embeds the whole
 // knowledge base in the Anthropic `system` prompt instead of retrieving
 // chunks; this module ports the text formats of the retired RAG chunker
-// (lib/search/chunks.ts) into a single deterministic string.
+// (removed from the repo) into a single deterministic string.
 
 import { describe, expect, it } from "vitest";
 import realSnapshotRaw from "../../data/github-repos.json";
