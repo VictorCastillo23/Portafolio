@@ -21,6 +21,12 @@ describe("Contact", () => {
     expect(container.querySelector("form")).toBeNull();
   });
 
+  it("does not render a Download CV link", () => {
+    render(<Contact />);
+
+    expect(screen.queryByRole("link", { name: /download cv/i })).toBeNull();
+  });
+
   it("has no accessibility violations", async () => {
     const { container } = render(<Contact />);
     await expectNoA11yViolations(container);
