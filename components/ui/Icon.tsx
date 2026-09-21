@@ -3,7 +3,8 @@
 // for: github, linkedin, mail, external, folder, code. `chat` and `send`
 // were added for the chat widget's launcher button and composer submit
 // button, matching the same Feather-style stroke-based convention (source:
-// Feather's `message-circle` and `send` icons). Icons are always decorative
+// Feather's `message-circle` and `send` icons). `sun` and `moon` (Feather's
+// icons of the same names) serve the theme toggle. Icons are always decorative
 // (aria-hidden) — the accessible name for any icon-only control belongs on
 // the wrapping <a>/<button> via aria-label, per the accessibility skill's
 // "icon buttons need accessible names" guidance.
@@ -18,7 +19,9 @@ export type IconName =
   | "folder"
   | "code"
   | "chat"
-  | "send";
+  | "send"
+  | "sun"
+  | "moon";
 
 interface IconProps {
   name: IconName;
@@ -65,6 +68,13 @@ const ICON_PATHS: Record<IconName, ReactNode> = {
       <path d="M22 2 15 22l-4-9-9-4z" />
     </>
   ),
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="5" />
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </>
+  ),
+  moon: <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />,
 };
 
 export function Icon({ name, className }: IconProps) {

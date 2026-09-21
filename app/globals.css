@@ -14,6 +14,21 @@
   --font-heading: var(--font-epilogue);
 }
 
+/* Dark theme, derived from the light palette: page bg = Primary, text = the
+   light Background, accent = the light Border. Surface and line are derived
+   in between; muted is 70% text over the bg. Applied by the inline script in
+   app/layout.tsx / ThemeToggle via data-theme on <html>. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: #0f172a;
+  --color-surface: #1b2438;
+  --color-line: #2a3550;
+  --color-text: #f1f5ff;
+  --color-primary: #f1f5ff;
+  --color-accent: #c6d4f3;
+  --color-muted: #adb2bf;
+}
+
 body {
   background: var(--color-ink);
   color: var(--color-text);

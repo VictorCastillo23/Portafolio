@@ -41,14 +41,26 @@ export const metadata: Metadata = {
   },
 };
 
+// Runs synchronously in <head>, before first paint, so the stored (or OS-level)
+// theme is applied without a flash of the wrong palette. Blocked storage falls
+// back to the OS preference; any other failure leaves the light default.
+const THEME_INIT_SCRIPT = `(function(){var t;try{t=localStorage.getItem("theme")}catch(e){}try{if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.dataset.theme=t}catch(e){}})()`;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
+    // suppressHydrationWarning: the script above sets data-theme on <html>
+    // before React hydrates, so the attribute intentionally differs from the
+    // server markup.
     <html
       lang="es"
       className={`${epilogue.variable} ${googleSans.variable}`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="bg-ink text-text font-sans antialiased">
         {children}
         <Analytics />
