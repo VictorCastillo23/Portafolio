@@ -4,10 +4,6 @@
 // TDD unit specs (same convention as the other presentational components in
 // this repo, e.g. ProjectCard).
 //
-// Source chips render BEFORE the answer text (design's explicit
-// sources-chips-before-answer ordering) so a visitor sees what grounded the
-// answer before reading it.
-//
 // Live-region announcement technique: the parent `<ul>` in ChatWidget is
 // `aria-live="polite"`. If the answer paragraph stayed in the accessible
 // tree while its text grew delta-by-delta, a screen reader would announce
@@ -20,7 +16,6 @@
 
 import type { ReactNode } from "react";
 import type { ChatUIMessage } from "./useChatStream";
-import { Icon } from "../ui/Icon";
 
 interface ChatMessageProps {
   message: ChatUIMessage;
@@ -38,24 +33,6 @@ export function ChatMessage({ message }: ChatMessageProps) {
           isUser ? "bg-accent text-ink" : "border border-line bg-surface text-text"
         }`}
       >
-        {!isUser && message.sources && message.sources.length > 0 ? (
-          <ul className="mb-2 flex flex-wrap gap-2">
-            {message.sources.map((source) => (
-              <li key={source.id}>
-                <a
-                  href={source.url ?? source.anchor}
-                  target={source.url ? "_blank" : undefined}
-                  rel={source.url ? "noreferrer" : undefined}
-                  className="inline-flex items-center gap-1 rounded-full border border-line bg-ink px-2 py-1 font-mono text-xs text-muted motion-safe:transition-colors hover:border-accent hover:text-accent"
-                >
-                  {source.title}
-                  {source.url ? <Icon name="external" className="h-3 w-3" /> : null}
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
         {isAwaitingFirstDelta ? (
           <span aria-hidden="true" className="flex items-center gap-1 py-1">
             <span className="h-1.5 w-1.5 rounded-full bg-muted motion-safe:animate-pulse" />

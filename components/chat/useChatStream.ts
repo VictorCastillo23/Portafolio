@@ -4,9 +4,13 @@
 // Contracts", tasks 6.2). Owns the message-list state machine so
 // ChatWidget/ChatMessage stay purely presentational.
 //
-// Reuses `ChatSseEvent`/`ChatSource` — the exact types the server's
-// `lib/chat/stream.ts` already encodes — as a type-only import: no runtime
-// code from that server module ships in the client bundle, only the shape.
+// Reuses `ChatSseEvent` — the exact type the server's `lib/chat/stream.ts`
+// already encodes — as a type-only import: no runtime code from that server
+// module ships in the client bundle, only the shape.
+//
+// The assistant message is a placeholder added as soon as the response stream
+// opens (so the typing indicator shows before the first delta). Unknown SSE
+// event names — including a legacy `sources` frame — are ignored.
 //
 // Status state machine: idle -> streaming -> (idle | error).
 //
@@ -17,13 +21,12 @@
 // response.json().
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import type { ChatSource, ChatSseEvent } from "../../lib/chat/stream";
+import type { ChatSseEvent } from "../../lib/chat/stream";
 
 export interface ChatUIMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
-  sources?: ChatSource[];
   /** True only while the assistant's own answer is still receiving deltas. */
   streaming?: boolean;
 }
@@ -100,11 +103,20 @@ export function useChatStream(): UseChatStreamResult {
       }
 
       const assistantId = nextId();
+      setMessages((previous) => [
+        ...previous,
+        { id: assistantId, role: "assistant", content: "", streaming: true },
+      ]);
       try {
         for await (const event of parseSseEvents(response.body)) {
           applyEvent(event, assistantId, setMessages, setStatus, setErrorMessage);
         }
       } catch {
+        // Without this, an empty placeholder would keep its typing indicator
+        // forever after the connection drops before the first delta.
+        setMessages((previous) =>
+          previous.map((message) => (message.id === assistantId ? { ...message, streaming: false } : message)),
+        );
         setStatus("error");
         setErrorMessage("La conexión se interrumpió.");
       }
@@ -123,12 +135,6 @@ function applyEvent(
   setErrorMessage: Dispatch<SetStateAction<string | null>>,
 ): void {
   switch (event.type) {
-    case "sources":
-      setMessages((previous) => [
-        ...previous,
-        { id: assistantId, role: "assistant", content: "", sources: event.sources, streaming: true },
-      ]);
-      return;
     case "delta":
       setMessages((previous) =>
         previous.map((message) =>
@@ -228,10 +234,6 @@ function toChatSseEvent(eventName: string, data: unknown): ChatSseEvent | null {
   const payload = data as Record<string, unknown>;
 
   switch (eventName) {
-    case "sources":
-      return Array.isArray(payload.sources)
-        ? { type: "sources", sources: payload.sources as ChatSource[] }
-        : null;
     case "delta":
       return typeof payload.text === "string" ? { type: "delta", text: payload.text } : null;
     case "done":

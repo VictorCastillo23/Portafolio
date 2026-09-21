@@ -5,7 +5,7 @@ import { ChatMessage } from "./ChatMessage";
 import type { ChatUIMessage } from "./useChatStream";
 
 describe("ChatMessage", () => {
-  it("renders a user message aligned to the end, without source chips", () => {
+  it("renders a user message aligned to the end, without links", () => {
     const message: ChatUIMessage = { id: "1", role: "user", content: "Hola" };
     const { container } = render(
       <ul>
@@ -18,15 +18,11 @@ describe("ChatMessage", () => {
     expect(container.querySelectorAll("a")).toHaveLength(0);
   });
 
-  it("renders source chips before the answer text for an assistant message", () => {
+  it("renders a completed assistant message with no links and no nested list", () => {
     const message: ChatUIMessage = {
       id: "2",
       role: "assistant",
       content: "Trabajé en Juventudes con Next.js.",
-      sources: [
-        { id: "experience-juventudes", section: "experience", title: "Juventudes", anchor: "#experience", url: null },
-        { id: "project-foo", section: "projects", title: "Foo", anchor: "#projects", url: "https://github.com/x/foo" },
-      ],
     };
     const { container } = render(
       <ul>
@@ -36,18 +32,9 @@ describe("ChatMessage", () => {
 
     const bubble = container.querySelector("li > div");
     expect(bubble).not.toBeNull();
-    const chipsList = bubble!.querySelector("ul");
-    const answer = bubble!.querySelector("p");
-
-    expect(chipsList).not.toBeNull();
-    expect(answer).not.toBeNull();
-    // Source chips must precede the answer paragraph in DOM order.
-    expect(chipsList!.compareDocumentPosition(answer!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-
-    expect(screen.getByRole("link", { name: "Juventudes" })).toHaveAttribute("href", "#experience");
-    const externalLink = screen.getByRole("link", { name: /Foo/ });
-    expect(externalLink).toHaveAttribute("href", "https://github.com/x/foo");
-    expect(externalLink).toHaveAttribute("target", "_blank");
+    expect(bubble!.querySelector("p")).toHaveTextContent("Trabajé en Juventudes con Next.js.");
+    expect(container.querySelectorAll("a")).toHaveLength(0);
+    expect(bubble!.querySelector("ul")).toBeNull();
   });
 
   it("hides the streaming answer text from the accessibility tree until it is done", () => {
@@ -111,7 +98,6 @@ describe("ChatMessage", () => {
       id: "5",
       role: "assistant",
       content: "Respuesta completa.",
-      sources: [{ id: "about-summary", section: "about", title: "Sobre mí", anchor: "#about", url: null }],
     };
     const { container } = render(
       <ul>
