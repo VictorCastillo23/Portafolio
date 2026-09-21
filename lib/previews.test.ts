@@ -2,8 +2,12 @@
 // Only the pure target selection is covered here; driving the browser is not
 // unit-testable and is verified by running the script itself.
 
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
-import type { Project } from "./projects";
+import realSnapshotRaw from "../data/github-repos.json";
+import { PROJECT_CURATION } from "../data/projects";
+import { mergeProjects, parseSnapshot, type Project } from "./projects";
 import { PREVIEW_SIZE, previewTargets } from "./previews";
 
 function project(overrides: Partial<Project> = {}): Project {
@@ -79,4 +83,24 @@ describe("previewTargets", () => {
   it("returns no targets for empty sections", () => {
     expect(previewTargets({ featured: [], other: [] })).toEqual([]);
   });
+});
+
+describe("contract: committed screenshots", () => {
+  // A project with a demo renders /previews/<repo>.png, so a missing file would
+  // ship a broken image. Fail here instead; regenerate with
+  // `npm run capture:previews`.
+  const repoRoot = path.resolve(import.meta.dirname, "..");
+  const sections = mergeProjects(PROJECT_CURATION, parseSnapshot(realSnapshotRaw));
+  const targets = previewTargets(sections);
+
+  it("has at least one project with a live demo to capture", () => {
+    expect(targets.length).toBeGreaterThan(0);
+  });
+
+  it.each(targets.map((target) => [target.repo, target.file] as const))(
+    "has the screenshot for %s at %s",
+    (_repo, file) => {
+      expect(existsSync(path.resolve(repoRoot, file))).toBe(true);
+    },
+  );
 });
