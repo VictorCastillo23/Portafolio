@@ -4,6 +4,8 @@
 // only the border-color transition remains, since `motion-safe:` scopes the
 // translate utility to `@media (prefers-reduced-motion: no-preference)`.
 
+import Image from "next/image";
+import { PREVIEW_SIZE } from "../../lib/previews";
 import type { Project } from "../../lib/projects";
 import { Icon } from "./Icon";
 
@@ -11,6 +13,14 @@ interface ProjectCardProps {
   project: Project;
   variant: "featured" | "other";
 }
+
+// Rendered width of the preview per variant (container is max-w-6xl; featured
+// cards take the full row, the others sit in a 1/2/3-column grid), so the
+// optimizer does not serve more pixels than the card can show.
+const PREVIEW_SIZES = {
+  featured: "(min-width: 1024px) 912px, (min-width: 640px) 80vw, 100vw",
+  other: "(min-width: 1024px) 256px, (min-width: 640px) 40vw, 100vw",
+} as const;
 
 const ICON_LINK = "relative z-10 text-muted motion-safe:transition-colors hover:text-accent";
 // Lit while the stretched card link (not one of the icon buttons, which sit
@@ -24,6 +34,20 @@ export function ProjectCard({ project, variant }: ProjectCardProps) {
 
   return (
     <article className="group/card relative rounded-lg border border-line bg-surface p-6 transition-[border-color,transform] duration-200 ease-out hover:border-accent motion-safe:hover:-translate-y-1">
+      {/* The fixed aspect box reserves the space before the image loads. The
+          stretched link below paints over it (later in the DOM), and
+          pointer-events-none keeps it out of the click path regardless. */}
+      <div className="pointer-events-none mb-5 aspect-[1200/630] overflow-hidden rounded-md border border-line">
+        <Image
+          src={project.previewUrl}
+          alt={`Vista previa de ${project.title}`}
+          width={PREVIEW_SIZE.width}
+          height={PREVIEW_SIZE.height}
+          sizes={PREVIEW_SIZES[variant]}
+          className="h-full w-full object-cover"
+        />
+      </div>
+
       <div className="flex items-center justify-between">
         <span aria-hidden="true" className="text-accent">
           <Icon name="folder" />

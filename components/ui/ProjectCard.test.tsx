@@ -16,6 +16,12 @@ const baseProject = {
   order: 1,
 };
 
+// next/image serves through /_next/image?url=<original>&w=..&q=..; the original
+// source is what the card is responsible for, so read it back from there.
+function optimizedSource(image: HTMLElement): string | null {
+  return new URL(image.getAttribute("src")!, "http://localhost").searchParams.get("url");
+}
+
 describe("ProjectCard", () => {
   it("renders the featured eyebrow and a demo link when demoUrl is present", () => {
     render(<ProjectCard project={baseProject} variant="featured" />);
@@ -103,6 +109,53 @@ describe("ProjectCard", () => {
     expect(
       screen.getByRole("link", { name: "Código de Es Vitrina en GitHub" }),
     ).toHaveClass("group-has-[[data-card-link]:hover]/card:text-accent");
+  });
+
+  it("renders the committed screenshot as the preview image when there is a demo", () => {
+    render(<ProjectCard project={baseProject} variant="featured" />);
+
+    const preview = screen.getByRole("img", { name: "Vista previa de Es Vitrina" });
+    expect(optimizedSource(preview)).toBe("/previews/Es_Vitrina.png");
+  });
+
+  it("renders the GitHub social image as the preview image when there is no demo", () => {
+    const project = {
+      ...baseProject,
+      demoUrl: null,
+      previewUrl: "https://opengraph.githubassets.com/1/VictorCastillo23/Es_Vitrina",
+    };
+    render(<ProjectCard project={project} variant="other" />);
+
+    const preview = screen.getByRole("img", { name: "Vista previa de Es Vitrina" });
+    expect(optimizedSource(preview)).toBe(project.previewUrl);
+  });
+
+  it("reserves a 1200:630 box for the preview so the card does not shift while it loads", () => {
+    render(<ProjectCard project={baseProject} variant="featured" />);
+
+    const preview = screen.getByRole("img", { name: "Vista previa de Es Vitrina" });
+    expect(preview.parentElement).toHaveClass("aspect-[1200/630]");
+  });
+
+  it("loads the preview lazily", () => {
+    render(<ProjectCard project={baseProject} variant="featured" />);
+
+    expect(screen.getByRole("img", { name: "Vista previa de Es Vitrina" })).toHaveAttribute(
+      "loading",
+      "lazy",
+    );
+  });
+
+  it("keeps the preview out of the click path so the stretched link still covers the card", () => {
+    render(<ProjectCard project={baseProject} variant="featured" />);
+
+    const preview = screen.getByRole("img", { name: "Vista previa de Es Vitrina" });
+    expect(preview.closest("a")).toBeNull();
+    expect(preview.parentElement).toHaveClass("pointer-events-none");
+    expect(screen.getByRole("link", { name: "Es Vitrina" })).toHaveClass(
+      "after:absolute",
+      "after:inset-0",
+    );
   });
 
   it("has no accessibility violations", async () => {
