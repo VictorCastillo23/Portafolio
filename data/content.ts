@@ -165,7 +165,7 @@ export const content: SiteContent = {
       id: "juventudes",
       company: "Juventudes — Gobierno Estatal",
       role: "Practicante de Desarrollador de Software Full Stack",
-      range: "Mayo 2026 — Actualidad",
+      range: "Febrero 2026 — Actualidad",
       bullets: [
         "Desarrollo backend de servicios y APIs con Node.js, integración mediante API Gateway y ejecución de procesos en segundo plano (Background Jobs).",
         "Implementación de autenticación y autorización con JWT, validación de entradas y manejo de permisos.",
@@ -270,10 +270,10 @@ export const content: SiteContent = {
   ],
 
   contact: {
-    eyebrow: "¿Qué sigue?",
-    title: "Hablemos",
+    eyebrow: "Hola",
+    title: "Hableme",
     blurb:
-      "Estoy abierto a nuevas oportunidades y colaboraciones. Escríbeme y con gusto platicamos.",
+      "Estoy abierto a nuevas oportunidades y colaboraciones.",
     email: "dev.victor.olivetto23@gmail.com",
     phone: "476 737 7263",
   },
@@ -292,6 +292,6 @@ export const content: SiteContent = {
   ],
 
   footer: {
-    text: "Diseñado y construido por Víctor Castillo Olivetto — Next.js, TypeScript y Tailwind CSS.",
+    text: "Derechos reservados © 2026 Víctor Manuel Castillo Olivetto",
   },
 };
