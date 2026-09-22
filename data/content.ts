@@ -271,7 +271,7 @@ export const content: SiteContent = {
 
   contact: {
     eyebrow: "Hola",
-    title: "Hableme",
+    title: "Hablemos",
     blurb:
       "Estoy abierto a nuevas oportunidades y colaboraciones.",
     email: "dev.victor.olivetto23@gmail.com",

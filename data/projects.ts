@@ -39,7 +39,7 @@ export const PROJECT_CURATION: readonly ProjectCuration[] = [
     order: 2,
     title: "Es Vitrina",
     description:
-      "Plataforma donde jóvenes publican y recomiendan obras académicas y artísticas (investigaciones, ilustraciones, poesía, proyectos) organizadas por disciplina, con comentarios, likes y revistas temáticas mensuales curadas por administradores. Full stack con Next.js 16, React 19 y TypeScript sobre Supabase (PostgreSQL, Auth, Storage), con seguridad basada en RLS y RPC en lugar de lógica en el servidor Next. Desplegado en producción en esvitrina.com.",
+      "Plataforma donde jóvenes publican y recomiendan obras académicas y artísticas organizadas por disciplina, con comentarios, likes y revistas mensuales. Full stack con Next.js 16, React 19 y TypeScript sobre Supabase (PostgreSQL, Auth, Storage), con seguridad basada en RLS y RPC en lugar de lógica en el servidor Next.",
     stack: ["TypeScript", "Next.js", "React", "PostgreSQL", "REST API"],
     demoUrl: "https://esvitrina.com",
   },
@@ -49,7 +49,7 @@ export const PROJECT_CURATION: readonly ProjectCuration[] = [
     order: 1,
     title: "Risk Game",
     description:
-      "Implementación completa y jugable del juego de mesa RISK como app web: motor de reglas propio (mapa clásico de 42 territorios, combate, refuerzos, cartas, fases de turno) separado de la interfaz jugable en Blazor Server, con tablero SVG de grilla hexagonal. Preparada para sumar un jugador de IA sin acceso a información oculta. Desplegada en Azure App Service.",
+      "Implementación completa y jugable del juego de mesa RISK como app web: motor de reglas propio separado de la interfaz jugable en Blazor Server. Preparada para sumar un jugador de IA. Desplegada en Azure App Service.",
     stack: ["C#", ".NET 8", "Blazor Server"],
     demoUrl: "https://risk-game-bghugbfnhfhjhmh0.mexicocentral-01.azurewebsites.net/",
   },
@@ -59,7 +59,7 @@ export const PROJECT_CURATION: readonly ProjectCuration[] = [
     order: 2,
     title: "Keyseer",
     description:
-      "Algoritmo de investigación para detección de keyframes en video por consolidación de componentes en un modelo de mezcla gaussiana online (MOG2): en vez de colapsar el mecanismo de poda a una máscara binaria de foreground/background, lee explícitamente la señal de consolidación que ese mecanismo descarta para distinguir eventos transitorios de eventos persistentes. Contribución teórica formalizada como proposición matemática y verificada empíricamente; documentado con transparencia como prototipo de investigación, no listo para producción.",
+      "Algoritmo para detección de keyframes en video por consolidación de componentes en un modelo de mezcla gaussiana online (MOG2). el objetivo es usar un algorito para obtener los key frames de un video con camara fija, no listo para producción.",
     stack: ["Python", "NumPy"],
   },
   {
@@ -68,7 +68,7 @@ export const PROJECT_CURATION: readonly ProjectCuration[] = [
     order: 3,
     title: "Tutorial OpenCV para Principiantes",
     description:
-      "Repositorio educativo de visión por computadora con Python y OpenCV: 11 módulos progresivos que cubren manipulación de imágenes, filtros, detección de características (ORB/SIFT), tracking, segmentación (Watershed/GrabCut), detección de objetos con deep learning (YOLOv4-tiny) y OCR con Tesseract, más un proyecto capstone de reconocimiento facial.",
+      "Repositorio educativo de visión por computadora con Python y OpenCV: 11 módulos progresivos que cubren manipulación de imágenes, filtros, detección de características, tracking, segmentación, detección de objetos con deep learning (YOLOv4-tiny), más un proyecto de reconocimiento facial.",
     stack: ["Python", "OpenCV", "NumPy"],
   },
 ] as const;
