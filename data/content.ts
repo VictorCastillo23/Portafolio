@@ -147,6 +147,7 @@ export const content: SiteContent = {
       "GitHub",
       "GitLab",
       "Linux",
+      "LangChain",
       "Postman",
       "Scrum",
       "LLMs",
@@ -167,13 +168,14 @@ export const content: SiteContent = {
       role: "Practicante de Desarrollador de Software Full Stack",
       range: "Febrero 2026 — Actualidad",
       bullets: [
-        "Desarrollo backend de servicios y APIs con Node.js, integración mediante API Gateway y ejecución de procesos en segundo plano (Background Jobs).",
-        "Implementación de autenticación y autorización con JWT, validación de entradas y manejo de permisos.",
-        "Implementación de buenas prácticas de seguridad: HTTPS y Secure Headers.",
-        "Trabajo con SQL Server enfocado en optimización de consultas, normalización de bases de datos y mejoras de rendimiento.",
-        "Migración del sistema Solicitudes de PHP a Angular + Node.js bajo arquitectura modular y principios de clean code.",
+        "Migración de un sistema monolítico en PHP hacia una arquitectura desacoplada frontend/backend (Angular + Node.js/Next.js) bajo arquitectura modular y principios de clean code / Clean Architecture.",
         "Desarrollo frontend con Angular Material, reactive forms, responsive design y consumo de APIs RESTful.",
-        "Colaboración bajo metodología SCRUM con flujo de trabajo por Pull Requests, documentación técnica, pruebas unitarias e integración continua.",
+        "Diseño, documentación y consumo de APIs RESTful con contratos claros (endpoints GET, POST, PATCH, DELETE), manejo de errores y validación server-side, integrando frontend y backend de forma desacoplada.",
+        "Implementación de autenticación y autorización con JWT, validación de entradas y manejo de permisos.",
+        "Desarrollo backend de servicios y APIs con Node.js / Next.js API routes, integración mediante API Gateway y ejecución de procesos en segundo plano (Background Jobs).",
+        "Trabajo con SQL Server enfocado en optimización de consultas, normalización de bases de datos y mejoras de rendimiento.",
+        "Colaboración bajo metodología SCRUM con flujo de trabajo por Pull Requests, revisiones de código, documentación técnica, pruebas unitarias e integración continua.",
+        "Implementación de buenas prácticas de seguridad: HTTPS y Secure Headers.",
       ],
     },
     {
@@ -182,13 +184,14 @@ export const content: SiteContent = {
       role: "Computer Vision Engineer",
       range: "Enero – Noviembre 2025",
       bullets: [
-        "Documenté especificaciones técnicas y procesos de operación del sistema.",
-        "Colaboré en validación de requerimientos técnicos y soporte a equipos de desarrollo.",
+        "Diseñé un pipeline de multiprocesamiento de video capaz de convertir grabaciones y transmisiones en vivo en descripciones textuales de la escena en tiempo real, priorizando eficiencia computacional, reducción de latencia y escalabilidad para cargas masivas.",
+        "Identificación de objetos, personas, posiciones, eventos e interacciones mediante IA aplicada, además el uso de LangChain para la orquestación de agentes con diferentes tools y skills.",
         "Implementé scripts en Python para automatización y procesamiento de información.",
-        "Diseñé un pipeline de multiprocesamiento de video capaz de convertir grabaciones y transmisiones en vivo en descripciones textuales de la escena en tiempo real.",
-        "Identificación de objetos, personas, posiciones, eventos e interacciones mediante IA aplicada.",
+        "Diseño de arquitecturas modulares orientadas a servicios y desarrollo de algoritmos de procesamiento y estructuración de datos optimizados.",
         "Modelé estructuras de datos para almacenamiento y explotación analítica.",
+        "Documenté especificaciones técnicas y procesos de operación del sistema, manteniendo documentación viva.",
         "Identifiqué riesgos técnicos relacionados con integridad de datos y estabilidad del sistema.",
+        "Colaboré en validación de requerimientos técnicos y soporte a equipos de desarrollo.",
       ],
     },
     {
@@ -197,20 +200,48 @@ export const content: SiteContent = {
       role: "Desarrollador de Software Jr.",
       range: "Marzo – Noviembre 2025",
       bullets: [
-        "Desarrollé y mantuve servicios backend utilizando PHP (Laravel) y MySQL.",
-        "Ejecuté consultas SQL para extracción, validación y corrección de datos en sistemas en producción.",
-        "Gestioné control de accesos, autenticación y manejo de sesiones.",
-        "Participé en despliegues y mantenimiento de software en entornos Linux y Windows.",
-        "Administré control de versiones y seguimiento de cambios mediante GitLab.",
         "Analicé requerimientos técnicos y documenté soluciones para desarrollo de sistemas y soporte operativo.",
+        "Desarrollé y mantuve servicios backend utilizando PHP (Laravel) y MySQL bajo patrón MVC, mejorando la eficiencia operativa en más del 30%.",
+        "Desarrollé una aplicación móvil desde cero utilizando Dart (Flutter), implementando y consumiendo APIs REST para la integración entre aplicaciones web y móviles.",
+        "Ejecuté consultas SQL para extracción, validación y corrección de datos en sistemas en producción.",
         "Realicé debugging y diagnóstico de incidencias en aplicaciones backend.",
         "Implementé controles de validación y pruebas funcionales previas a despliegue en QA y producción.",
+        "Gestioné control de accesos, autenticación y manejo de sesiones.",
+        "Participé en despliegues y mantenimiento de software en entornos Linux y Windows.",
         "Colaboré en soporte a equipos internos durante liberaciones de sistema.",
+        "Administré control de versiones y seguimiento de cambios mediante Git (GitLab), con flujo de ramas y revisiones.",
       ],
     },
   ],
 
   credentials: [
+    {
+      kind: "rutaAprendizaje",
+      title: "AZ-400: Desarrollo para Enterprise DevOps",
+      issuer: "Microsoft Learning DevOps",
+      date: "Agosto 2026",
+      detail:
+        "En esta ruta de aprendizaje aprendí a definir DevOps como la unión de personas, procesos y productos, además del control de código usando Git, GitHub Projects, GitHub Project Boards y Azure Boards, y también sobre cómo buscar y administrar deudas técnicas en el código, usar herramientas de calidad de código y planear revisiones de código.",
+      url: "https://learn.microsoft.com/es-mx/users/vctormanuelcastilloolivetto-3812/achievements/3zpr2ebh",
+    },
+    {
+      kind: "certification",
+      title: "Claude with the Anthropic API",
+      issuer: "Anthropic",
+      date: "Julio 2026",
+      detail:
+        "En este curso aprendí a usar de manera completa la API de Claude, desde el uso básico hasta las arquitecturas avanzadas de agentes. Aprendí a integrar Claude en aplicaciones, implementar llamadas a herramientas, construir pipelines RAG y diseñar tanto flujos de trabajo deterministas como sistemas de agentes flexibles; estos conocimientos los usé para incluir un RAG en esta página.",
+      url: "https://verify.skilljar.com/c/m24fueues7ek",
+    },
+    {
+      kind: "rutaAprendizaje",
+      title: "AZ-400: Implementación de la seguridad y validación de bases de código para el cumplimiento",
+      issuer: "Microsoft Learning DevOps",
+      date: "Agosto 2026",
+      detail:
+        "En esta ruta de aprendizaje impartida por Microsoft aprendí sobre la seguridad en todo el ciclo de vida de desarrollo de software mediante prácticas de DevSecOps, a proteger las canalizaciones de CI/CD con controles de autenticación y administración de secretos, a realizar análisis de composición de software con administración de dependencias y corrección automatizada, y seguridad avanzada de GitHub.",
+      url: "https://learn.microsoft.com/es-mx/users/vctormanuelcastilloolivetto-3812/achievements/3zpw7bdh",
+    },
     {
       kind: "award",
       title: "7° Lugar Internacional — Torneo Mundial WER (World Educational Robotics)",
@@ -230,33 +261,6 @@ export const content: SiteContent = {
       detail:
         "En colaboración con Emerald Digital y el ITSPR desarrollamos un pipeline multi-etapa que combina detección de objetos con modelos de lenguaje de gran escala (LLMs) para comprensión de escenas en video, capaz de tomar una serie de videos en vivo y responder preguntas con un delay de 30 segundos.",
       url: "https://link.springer.com/chapter/10.1007/978-3-032-09044-7_23",
-    },
-    {
-      kind: "rutaAprendizaje",
-      title: "AZ-400: Desarrollo para Enterprise DevOps",
-      issuer: "Microsoft Learning DevOps",
-      date: "Agosto 2026",
-      detail:
-        "En esta ruta de aprendizaje aprendí a definir DevOps como la unión de personas, procesos y productos, además del control de código usando Git, GitHub Projects, GitHub Project Boards y Azure Boards, y también sobre cómo buscar y administrar deudas técnicas en el código, usar herramientas de calidad de código y planear revisiones de código.",
-      url: "https://learn.microsoft.com/es-mx/users/vctormanuelcastilloolivetto-3812/achievements/3zpr2ebh",
-    },
-    {
-      kind: "rutaAprendizaje",
-      title: "AZ-400: Implementación de la seguridad y validación de bases de código para el cumplimiento",
-      issuer: "Microsoft Learning DevOps",
-      date: "Agosto 2026",
-      detail:
-        "En esta ruta de aprendizaje impartida por Microsoft aprendí sobre la seguridad en todo el ciclo de vida de desarrollo de software mediante prácticas de DevSecOps, a proteger las canalizaciones de CI/CD con controles de autenticación y administración de secretos, a realizar análisis de composición de software con administración de dependencias y corrección automatizada, y seguridad avanzada de GitHub.",
-      url: "https://learn.microsoft.com/es-mx/users/vctormanuelcastilloolivetto-3812/achievements/3zpw7bdh",
-    },
-    {
-      kind: "certification",
-      title: "Claude with the Anthropic API",
-      issuer: "Anthropic",
-      date: "Julio 2026",
-      detail:
-        "En este curso aprendí a usar de manera completa la API de Claude, desde el uso básico hasta las arquitecturas avanzadas de agentes. Aprendí a integrar Claude en aplicaciones, implementar llamadas a herramientas, construir pipelines RAG y diseñar tanto flujos de trabajo deterministas como sistemas de agentes flexibles; estos conocimientos los usé para incluir un RAG en esta página.",
-      url: "https://verify.skilljar.com/c/m24fueues7ek",
     },
     {
       kind: "certification",
