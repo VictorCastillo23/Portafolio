@@ -15,7 +15,7 @@
 //     message).
 
 /** 1..500 chars after trim (design: "message: string, 1..500 chars, trimmed"). */
-export const MAX_MESSAGE_LENGTH = 500;
+export const MAX_MESSAGE_LENGTH = 3500;
 /** "last 6 kept" (design). */
 export const MAX_HISTORY_ENTRIES = 6;
 /** "2000 chars each" (design). */
